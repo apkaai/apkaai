@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+frontend/.next/
+frontend/out/
+
+# Build outputs
+dist/
+build/
+
+# Environment — NEVER commit these
+.env
+.env.local
+.env.production
+backend/.env
+
+# AWS / secrets
+deploy/s3-cloudfront-config.txt
+*.pem
+*.key
+
+# Logs
+*.log
+npm-debug.log*
+pm2.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo

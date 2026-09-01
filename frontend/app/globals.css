@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-dark: #0F0A1E;
+  --bg-darker: #08051A;
+  --purple: #7C3AED;
+  --violet: #6D28D9;
+  --glow: #A855F7;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-darker);
+  color: #E2E8F0;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #08051A; }
+::-webkit-scrollbar-thumb { background: #7C3AED; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #A855F7; }
+
+/* Glow effect */
+.glow-text {
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+.glow-border {
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.2), inset 0 0 15px rgba(124, 58, 237, 0.05);
+}
+
+.glow-border:hover {
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 25px rgba(124, 58, 237, 0.4), inset 0 0 20px rgba(124, 58, 237, 0.1);
+}
+
+/* Card hover */
+.ai-card {
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(15,10,30,0.9) 100%);
+}
+
+.ai-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(124,58,237,0.3);
+}
+
+/* Badge */
+.badge-new {
+  background: linear-gradient(90deg, #7C3AED, #A855F7);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #E2E8F0 0%, #A855F7 50%, #7C3AED 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Purple button */
+.btn-primary {
+  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  box-shadow: 0 0 20px rgba(124,58,237,0.5);
+  transform: translateY(-1px);
+}
+
+/* Grid background pattern */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}

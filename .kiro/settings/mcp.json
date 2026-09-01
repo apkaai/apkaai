@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "apkaai-tools-api": {
+      "command": "node",
+      "args": ["backend/src/mcp-server.js"],
+      "env": {
+        "AWS_REGION": "ap-south-1",
+        "DYNAMODB_TOOLS_TABLE": "apkaai-tools",
+        "DYNAMODB_CATEGORIES_TABLE": "apkaai-categories"
+      },
+      "disabled": false
+    },
+    "aws-docs": {
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false
+    }
+  }
+}
