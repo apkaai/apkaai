@@ -9,7 +9,7 @@ import { tools, categories } from '@/lib/tools-data'
 const PRICING_FILTERS = [
   { value: 'All',        label: 'All' },
   { value: 'Free',       label: 'Free' },
-  { value: 'Freemium',   label: 'Freemium' },
+  { value: 'Freemium',   label: 'Premium' },
   { value: 'Paid',       label: 'Paid' },
   { value: 'Free Trial', label: 'Free Trial' },
 ]
@@ -97,7 +97,7 @@ function ToolsInner() {
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">All AI Tools</h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
-            Discover {tools.length}+ AI tools across 15 categories. Find the perfect AI for your workflow.
+            Discover 43 AI tools across 15 categories. Find the perfect AI for your workflow.
           </p>
         </div>
 

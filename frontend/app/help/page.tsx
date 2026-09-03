@@ -8,7 +8,7 @@ const faqs = [
     category: 'General',
     emoji: '💬',
     items: [
-      { q: 'What is ApkaAI?', a: 'ApkaAI is India\'s #1 AI tools marketplace. We curate, review, and compare 70+ AI tools across 15 categories so you can find the perfect AI for your needs — all in one place.' },
+      { q: 'What is ApkaAI?', a: 'ApkaAI is India\'s #1 AI tools marketplace. We curate, review, and compare 43 AI tools across 15 categories so you can find the perfect AI for your needs — all in one place.' },
       { q: 'Is ApkaAI free to use?', a: 'Yes! Browsing, comparing, and discovering AI tools on ApkaAI is completely free. We earn through affiliate partnerships and sponsored listings.' },
       { q: 'How often is the directory updated?', a: 'We update our AI tools directory daily. New tools are added as soon as they launch and pricing is reviewed monthly.' },
       { q: 'How do I submit my AI tool for listing?', a: 'Email us at ashutoshkumarpandey@apkaai.com with your tool name, website, category, and a brief description. We review all submissions within 48 hours.' },

@@ -27,7 +27,7 @@ function LogoMark({ size = 28 }: { size?: number }) {
 
 const footerLinks = {
   'AI Tools': [
-    { label: 'All 70+ Tools',       href: '/tools' },
+    { label: 'All 43 Tools',       href: '/tools' },
     { label: 'AI Chat & Research',  href: '/category/ai-chat' },
     { label: 'Image Generation',    href: '/category/image-generation' },
     { label: 'Coding Tools',        href: '/category/coding' },
@@ -71,7 +71,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-slate-400 text-sm leading-relaxed max-w-xs mb-5">
-              India&apos;s #1 marketplace for AI tools. Discover, compare and access 70+ AI tools — ChatGPT, Claude, Midjourney and more — all in one place.
+              India&apos;s #1 marketplace for AI tools. Discover, compare and access 43 AI tools — ChatGPT, Claude, Midjourney and more — all in one place.
             </p>
 
             {/* Contact info */}

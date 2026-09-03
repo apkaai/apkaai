@@ -5,7 +5,7 @@ import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'ApkaAI — Discover & Buy the Best AI Tools',
-  description: 'Your one-stop marketplace for AI tools — ChatGPT, Claude, Midjourney, Cursor, and 100+ more. Find, compare and get the best AI subscriptions.',
+  description: 'Your one-stop marketplace for AI tools — ChatGPT, Claude, Midjourney, Cursor, and 43 more. Find, compare and get the best AI subscriptions.',
   keywords: 'AI tools, ChatGPT, Claude, Midjourney, Cursor, AI marketplace, buy AI subscriptions',
   openGraph: {
     title: 'ApkaAI — Discover & Buy the Best AI Tools',

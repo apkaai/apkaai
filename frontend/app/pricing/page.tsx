@@ -47,7 +47,7 @@ export default function PricingPage() {
                   : 'bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-500'
               }`}
             >
-              {p === 'Free' ? '🆓 Free' : p === 'Freemium' ? '⚡ Freemium' : p === 'Paid' ? '💳 Paid' : p === 'Free Trial' ? '🎁 Free Trial' : '🌟 All'}
+              {p === 'Free' ? '🆓 Free' : p === 'Freemium' ? '⚡ Premium' : p === 'Paid' ? '💳 Paid' : p === 'Free Trial' ? '🎁 Free Trial' : '🌟 All'}
             </button>
           ))}
         </div>
@@ -75,7 +75,7 @@ export default function PricingPage() {
           {[
             { label: 'Total Tools', value: filtered.length, color: 'text-purple-400' },
             { label: 'Free Tools', value: filtered.filter(t => t.pricing === 'Free' || t.monthlyPrice === 0).length, color: 'text-emerald-400' },
-            { label: 'Freemium', value: filtered.filter(t => t.pricing === 'Freemium').length, color: 'text-blue-400' },
+            { label: 'Premium', value: filtered.filter(t => t.pricing === 'Freemium').length, color: 'text-blue-400' },
             { label: 'Paid Only', value: filtered.filter(t => t.pricing === 'Paid').length, color: 'text-amber-400' },
           ].map(s => (
             <div key={s.label} className="glow-border rounded-xl p-4 text-center bg-[#0F0A1E]">
@@ -106,7 +106,7 @@ export default function PricingPage() {
                         tool.pricing === 'Free' ? 'bg-emerald-900/50 text-emerald-400'
                         : tool.pricing === 'Freemium' ? 'bg-blue-900/50 text-blue-400'
                         : 'bg-amber-900/50 text-amber-400'
-                      }`}>{tool.pricing}</span>
+                      }`}>{tool.pricing === 'Freemium' ? 'Premium' : tool.pricing}</span>
                     </div>
                     <p className="text-slate-400 text-sm truncate mt-0.5">{tool.tagline}</p>
                   </div>
