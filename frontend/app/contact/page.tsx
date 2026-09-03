@@ -1,14 +1,17 @@
 'use client'
 import { useState } from 'react'
-import { Mail, Linkedin, Twitter, MapPin, Send, CheckCircle, MessageSquare, Zap } from 'lucide-react'
+import { Mail, Linkedin, Twitter, MapPin, Send, CheckCircle, MessageSquare } from 'lucide-react'
+
+const MAPS_URL = 'https://maps.google.com/?q=Ace+City,+Greater+Noida,+Uttar+Pradesh,+India'
 
 const contactInfo = [
   {
     icon: Mail,
     label: 'Email Us',
-    value: 'coolakpandey@gmail.com',
-    href: 'mailto:coolakpandey@gmail.com',
-    desc: 'Contact: Ashutosh Kumar Pandey',
+    value: 'ashutoshkumarpandey@apkaai.com',
+    href: 'mailto:ashutoshkumarpandey@apkaai.com',
+    desc: 'Contact: Ashutosh Kumar Pandey — replies within 24 hrs',
+    external: false,
   },
   {
     icon: Linkedin,
@@ -16,6 +19,7 @@ const contactInfo = [
     value: 'ApkaAI on LinkedIn',
     href: 'https://www.linkedin.com/in/apkaai-3784a1433/',
     desc: 'Connect with us professionally',
+    external: true,
   },
   {
     icon: Twitter,
@@ -23,41 +27,28 @@ const contactInfo = [
     value: '@apkaai',
     href: 'https://twitter.com/apkaai',
     desc: 'Follow for daily AI tool updates',
+    external: true,
   },
   {
     icon: MapPin,
     label: 'Location',
-    value: 'India 🇮🇳',
-    href: '#',
-    desc: "Built with love in India",
+    value: 'Ace City, Greater Noida',
+    href: MAPS_URL,
+    desc: 'Uttar Pradesh, India — click to open in Google Maps',
+    external: true,
   },
 ]
 
 const faqs = [
-  {
-    q: 'How do I list my AI tool on ApkaAI?',
-    a: "Send us an email at hello@apkaai.com with your tool's name, website, category, and a brief description. We'll review and add it within 48 hours.",
-  },
-  {
-    q: 'Are the prices shown accurate?',
-    a: 'We update pricing regularly but recommend checking the official website for the latest plans. Prices are shown in Indian Rupees (₹) for easy comparison.',
-  },
-  {
-    q: 'Can I advertise on ApkaAI?',
-    a: 'Yes! We offer featured listings and sponsored content for AI companies. Contact us at hello@apkaai.com for partnership details.',
-  },
-  {
-    q: 'How can I report incorrect information?',
-    a: "Use the contact form or email us directly. We'll fix any inaccuracies within 24 hours.",
-  },
-  {
-    q: 'Do you offer affiliate programs?',
-    a: "We're building an affiliate program for content creators and bloggers. Subscribe to our newsletter to be notified when it launches.",
-  },
+  { q: 'How do I list my AI tool on ApkaAI?', a: 'Email ashutoshkumarpandey@apkaai.com with your tool name, website, category, and a brief description. We review all submissions within 48 hours.' },
+  { q: 'Are the prices shown accurate?', a: 'We update pricing regularly. Always verify on the official website before purchasing. Prices are shown in INR for easy comparison.' },
+  { q: 'Can I advertise on ApkaAI?', a: 'Yes! We offer featured listings and sponsored content. Email ashutoshkumarpandey@apkaai.com for partnership details.' },
+  { q: 'How do I report incorrect information?', a: 'Email ashutoshkumarpandey@apkaai.com with the tool name and the incorrect details. We fix inaccuracies within 24 hours.' },
+  { q: 'Do you offer affiliate programs?', a: "We're building an affiliate program for content creators. Subscribe to our newsletter to be notified when it launches." },
 ]
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
+  const [form, setForm]     = useState({ name: '', email: '', subject: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
@@ -70,15 +61,9 @@ export default function ContactPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (res.ok) {
-        setStatus('sent')
-        setForm({ name: '', email: '', subject: '', message: '' })
-      } else {
-        setStatus('error')
-      }
-    } catch {
-      setStatus('error')
-    }
+      if (res.ok) { setStatus('sent'); setForm({ name: '', email: '', subject: '', message: '' }) }
+      else setStatus('error')
+    } catch { setStatus('error') }
   }
 
   return (
@@ -91,11 +76,9 @@ export default function ContactPage() {
             <MessageSquare className="w-4 h-4" />
             We&apos;d love to hear from you
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
-            Get in Touch
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">Get in Touch</h1>
           <p className="text-slate-400 text-lg max-w-xl mx-auto">
-            Questions, partnerships, tool listings, or just want to say hi — we&apos;re here.
+            Questions, partnerships, tool listings, or just want to say hi — Ashutosh Kumar Pandey personally replies to every message.
           </p>
         </div>
 
@@ -103,12 +86,12 @@ export default function ContactPage() {
 
           {/* Contact cards */}
           <div className="space-y-4">
-            {contactInfo.map(({ icon: Icon, label, value, href, desc }) => (
+            {contactInfo.map(({ icon: Icon, label, value, href, desc, external }) => (
               <a
                 key={label}
                 href={href}
-                target={href.startsWith('http') ? '_blank' : undefined}
-                rel="noopener noreferrer"
+                target={external ? '_blank' : undefined}
+                rel={external ? 'noopener noreferrer' : undefined}
                 className="flex items-start gap-4 p-5 glow-border rounded-xl bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group block"
               >
                 <div className="w-10 h-10 rounded-lg bg-purple-900/40 border border-purple-700/30 flex items-center justify-center flex-shrink-0 group-hover:border-purple-500 transition-colors">
@@ -117,7 +100,7 @@ export default function ContactPage() {
                 <div>
                   <div className="text-slate-400 text-xs font-medium uppercase tracking-wider mb-0.5">{label}</div>
                   <div className="text-white font-semibold text-sm group-hover:text-purple-300 transition-colors">{value}</div>
-                  <div className="text-slate-500 text-xs mt-0.5">{desc}</div>
+                  <div className="text-slate-500 text-xs mt-0.5 leading-relaxed">{desc}</div>
                 </div>
               </a>
             ))}
@@ -134,7 +117,7 @@ export default function ContactPage() {
               </div>
               <div className="flex-1">
                 <div className="text-white font-bold text-sm">Follow on LinkedIn</div>
-                <div className="text-blue-400 text-xs">apkaai.com/in/apkaai</div>
+                <div className="text-blue-400 text-xs">linkedin.com/in/apkaai</div>
               </div>
               <span className="text-xs text-blue-400 bg-blue-900/40 px-2 py-1 rounded-full">Follow</span>
             </a>
@@ -146,46 +129,40 @@ export default function ContactPage() {
               <div className="flex flex-col items-center justify-center h-full py-12 text-center">
                 <CheckCircle className="w-16 h-16 text-emerald-400 mb-4" />
                 <h3 className="text-xl font-bold text-white mb-2">Message Sent!</h3>
-                <p className="text-slate-400">We&apos;ll get back to you within 24 hours.</p>
+                <p className="text-slate-400 mb-1">Ashutosh Kumar Pandey will get back to you within 24 hours.</p>
+                <p className="text-slate-500 text-sm">Reply will come from ashutoshkumarpandey@apkaai.com</p>
                 <button onClick={() => setStatus('idle')} className="mt-6 text-purple-400 text-sm hover:text-purple-300">
                   Send another message
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
-                <h2 className="text-xl font-bold text-white mb-6">Send us a message</h2>
-          <p className="text-slate-500 text-xs mb-5">Your query will be sent to <span className="text-purple-400">Ashutosh Kumar Pandey</span> at coolakpandey@gmail.com</p>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Send us a message</h2>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Your message goes directly to <span className="text-purple-400">Ashutosh Kumar Pandey</span> at ashutoshkumarpandey@apkaai.com
+                  </p>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Your Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={form.name}
+                    <input type="text" required value={form.name}
                       onChange={e => setForm({ ...form, name: e.target.value })}
                       placeholder="Your Name"
-                      className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                    />
+                      className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      required
-                      value={form.email}
+                    <input type="email" required value={form.email}
                       onChange={e => setForm({ ...form, email: e.target.value })}
-                      placeholder="rahul@example.com"
-                      className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                    />
+                      placeholder="you@example.com"
+                      className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Subject</label>
-                  <select
-                    value={form.subject}
-                    onChange={e => setForm({ ...form, subject: e.target.value })}
-                    className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                  >
+                  <select value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })}
+                    className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition">
                     <option value="" className="bg-[#0F0A1E]">Select a topic...</option>
                     <option value="List my AI tool" className="bg-[#0F0A1E]">List my AI tool on ApkaAI</option>
                     <option value="Partnership" className="bg-[#0F0A1E]">Partnership / Advertising</option>
@@ -197,23 +174,19 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Message</label>
-                  <textarea
-                    required
-                    rows={5}
-                    value={form.message}
+                  <textarea required rows={5} value={form.message}
                     onChange={e => setForm({ ...form, message: e.target.value })}
                     placeholder="Tell us how we can help..."
-                    className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none"
-                  />
+                    className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none" />
                 </div>
                 {status === 'error' && (
-                  <p className="text-red-400 text-sm">Something went wrong. Please try again or email us directly at hello@apkaai.com</p>
+                  <p className="text-red-400 text-sm">
+                    Something went wrong. Email us directly at{' '}
+                    <a href="mailto:ashutoshkumarpandey@apkaai.com" className="underline">ashutoshkumarpandey@apkaai.com</a>
+                  </p>
                 )}
-                <button
-                  type="submit"
-                  disabled={status === 'sending'}
-                  className="btn-primary flex items-center gap-2 text-white font-bold px-8 py-3.5 rounded-xl w-full justify-center disabled:opacity-60"
-                >
+                <button type="submit" disabled={status === 'sending'}
+                  className="btn-primary flex items-center gap-2 text-white font-bold px-8 py-3.5 rounded-xl w-full justify-center disabled:opacity-60">
                   <Send className="w-4 h-4" />
                   {status === 'sending' ? 'Sending...' : 'Send Message'}
                 </button>
@@ -228,17 +201,13 @@ export default function ContactPage() {
           <div className="max-w-3xl mx-auto space-y-3">
             {faqs.map((faq, i) => (
               <div key={i} className="glow-border rounded-xl bg-[#0F0A1E] overflow-hidden">
-                <button
-                  className="w-full flex items-center justify-between p-5 text-left"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                >
+                <button className="w-full flex items-center justify-between p-5 text-left"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}>
                   <span className="font-semibold text-white text-sm pr-4">{faq.q}</span>
                   <span className={`text-purple-400 flex-shrink-0 transition-transform ${openFaq === i ? 'rotate-180' : ''}`}>▼</span>
                 </button>
                 {openFaq === i && (
-                  <div className="px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-purple-900/30 pt-4">
-                    {faq.a}
-                  </div>
+                  <div className="px-5 pb-5 text-slate-400 text-sm leading-relaxed border-t border-purple-900/30 pt-4">{faq.a}</div>
                 )}
               </div>
             ))}
