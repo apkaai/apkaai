@@ -9,7 +9,7 @@ import { tools, categories } from '@/lib/tools-data'
 const PRICING_FILTERS = [
   { value: 'All',        label: 'All' },
   { value: 'Free',       label: 'Free' },
-  { value: 'Freemium',   label: 'Premium' },
+  { value: 'Freemium',   label: 'Freemium' },
   { value: 'Paid',       label: 'Paid' },
   { value: 'Free Trial', label: 'Free Trial' },
 ]

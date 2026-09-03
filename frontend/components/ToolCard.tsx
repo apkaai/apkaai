@@ -7,9 +7,9 @@ interface ToolCardProps {
   compact?: boolean
 }
 
-// "Freemium" shown as "Premium" per requirement
+// Keep original label — Freemium stays as Freemium
 function pricingLabel(p: string) {
-  return p === 'Freemium' ? 'Premium' : p
+  return p
 }
 
 function pricingClass(p: string) {

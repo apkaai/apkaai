@@ -19,9 +19,9 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-// "Freemium" shown as "Premium" in UI
+// Freemium keeps its original label
 function pricingLabel(pricing: string) {
-  return pricing === 'Freemium' ? 'Premium' : pricing
+  return pricing
 }
 
 function pricingColor(pricing: string) {
