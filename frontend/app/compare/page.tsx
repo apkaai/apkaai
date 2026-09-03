@@ -140,7 +140,8 @@ function ComparisonTable({ tools: selectedTools }: { tools: AITool[] }) {
             <tr key={feat.key} className="border-t border-purple-900/20">
               <td className="p-4 text-slate-400 text-sm font-medium sticky left-0 bg-[#08051A]">{feat.label}</td>
               {selectedTools.map(t => {
-                const val = (t as Record<string, unknown>)[feat.key]
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const val = (t as any)[feat.key]
                 return (
                   <td key={t.id} className="p-4 text-center">
                     {feat.key === 'rating' ? (

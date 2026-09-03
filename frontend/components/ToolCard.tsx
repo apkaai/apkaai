@@ -1,10 +1,24 @@
 import Link from 'next/link'
-import { Star, ExternalLink, ArrowRight } from 'lucide-react'
+import { Star, ArrowRight } from 'lucide-react'
 import type { AITool } from '@/lib/tools-data'
 
 interface ToolCardProps {
   tool: AITool
   compact?: boolean
+}
+
+// "Freemium" shown as "Premium" per requirement
+function pricingLabel(p: string) {
+  return p === 'Freemium' ? 'Premium' : p
+}
+
+function pricingClass(p: string) {
+  switch (p) {
+    case 'Free':       return 'bg-emerald-900/40 text-emerald-400'
+    case 'Free Trial': return 'bg-teal-900/40 text-teal-400'
+    case 'Paid':       return 'bg-amber-900/40 text-amber-400'
+    default:           return 'bg-blue-900/40 text-blue-400'  // Freemium/Premium
+  }
 }
 
 export default function ToolCard({ tool, compact = false }: ToolCardProps) {
@@ -13,17 +27,12 @@ export default function ToolCard({ tool, compact = false }: ToolCardProps) {
       <div className="ai-card glow-border rounded-xl p-5 h-full relative overflow-hidden">
         {/* Badge */}
         {tool.badge && (
-          <span className="badge-new absolute top-4 right-4 text-white z-10">
-            {tool.badge}
-          </span>
+          <span className="badge-new absolute top-4 right-4 text-white z-10">{tool.badge}</span>
         )}
         {tool.new && !tool.badge && (
-          <span className="badge-new absolute top-4 right-4 text-white bg-gradient-to-r from-emerald-600 to-teal-600 z-10">
-            New
-          </span>
+          <span className="badge-new absolute top-4 right-4 text-white bg-gradient-to-r from-emerald-600 to-teal-600 z-10">New</span>
         )}
 
-        {/* Background glow */}
         <div className="absolute inset-0 bg-glow-gradient opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
         <div className="relative z-10">
@@ -64,14 +73,8 @@ export default function ToolCard({ tool, compact = false }: ToolCardProps) {
               <span className="text-xs text-slate-500">({tool.reviews.toLocaleString()})</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-semibold px-2 py-1 rounded-md ${
-                tool.pricing === 'Free'
-                  ? 'bg-emerald-900/40 text-emerald-400'
-                  : tool.pricing === 'Freemium'
-                  ? 'bg-blue-900/40 text-blue-400'
-                  : 'bg-purple-900/40 text-purple-400'
-              }`}>
-                {tool.pricing}
+              <span className={`text-xs font-semibold px-2 py-1 rounded-md ${pricingClass(tool.pricing)}`}>
+                {pricingLabel(tool.pricing)}
               </span>
               <ArrowRight className="w-4 h-4 text-purple-500 group-hover:text-purple-300 group-hover:translate-x-1 transition-all" />
             </div>

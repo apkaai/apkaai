@@ -6,9 +6,9 @@ const contactInfo = [
   {
     icon: Mail,
     label: 'Email Us',
-    value: 'hello@apkaai.com',
-    href: 'mailto:hello@apkaai.com',
-    desc: 'We reply within 24 hours',
+    value: 'coolakpandey@gmail.com',
+    href: 'mailto:coolakpandey@gmail.com',
+    desc: 'Contact: Ashutosh Kumar Pandey',
   },
   {
     icon: Linkedin,
@@ -154,6 +154,7 @@ export default function ContactPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <h2 className="text-xl font-bold text-white mb-6">Send us a message</h2>
+          <p className="text-slate-500 text-xs mb-5">Your query will be sent to <span className="text-purple-400">Ashutosh Kumar Pandey</span> at coolakpandey@gmail.com</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Your Name</label>
@@ -162,7 +163,7 @@ export default function ContactPage() {
                       required
                       value={form.name}
                       onChange={e => setForm({ ...form, name: e.target.value })}
-                      placeholder="Rahul Sharma"
+                      placeholder="Your Name"
                       className="w-full bg-purple-950/30 border border-purple-800/40 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
                     />
                   </div>

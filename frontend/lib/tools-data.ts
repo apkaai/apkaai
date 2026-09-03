@@ -867,6 +867,144 @@ export const tools: AITool[] = [
   },
 ]
 
+// ── Free Trial Tools ───────────────────────────────────────────────────────────
+// Appended as separate entries with pricing: 'Free Trial'
+const freeTrialTools: AITool[] = [
+  {
+    id: 'ft1', name: 'Jasper AI Trial', slug: 'jasper-trial',
+    tagline: '7-day free trial of Jasper AI writing platform',
+    description: 'Try Jasper AI free for 7 days — full access to all templates, Brand Voice, SEO integration, and AI chat. No credit card required to start.',
+    category: 'Writing & Content', categorySlug: 'writing', logo: '✍️',
+    website: 'https://jasper.ai/free-trial', pricing: 'Free Trial', startingPrice: '7 days free', monthlyPrice: 0,
+    rating: 4.4, reviews: 72000, tags: ['Writing', 'Marketing', 'Trial', '7 Days', 'No Credit Card'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0 for 7 days', monthly: 0, features: ['Full feature access', 'All templates', 'AI chat', 'Brand Voice', 'No credit card'], popular: true },
+      { name: 'Creator (after trial)', price: '₹2,900/mo', monthly: 2900, features: ['Unlimited words', 'SEO tools', '1 brand voice'] },
+    ]
+  },
+  {
+    id: 'ft2', name: 'HeyGen Trial', slug: 'heygen-trial',
+    tagline: 'Create AI avatar videos free — 1 video on us',
+    description: 'HeyGen offers a free trial with 1 video credit to create your first AI avatar video. Experience professional video creation without any upfront cost.',
+    category: 'Video Generation', categorySlug: 'video-generation', logo: '👤',
+    website: 'https://heygen.com', pricing: 'Free Trial', startingPrice: '1 video free', monthlyPrice: 0,
+    rating: 4.7, reviews: 42000, tags: ['Avatar', 'Video', 'Trial', 'Free Credit', 'Marketing'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0', monthly: 0, features: ['1 free video', 'AI avatar', '720p quality', 'Watermark'], popular: true },
+      { name: 'Creator (after trial)', price: '₹2,490/mo', monthly: 2490, features: ['15 credits/mo', 'No watermark', '1080p'] },
+    ]
+  },
+  {
+    id: 'ft3', name: 'Synthesia Trial', slug: 'synthesia-trial',
+    tagline: 'Make 3 free AI presenter videos with Synthesia',
+    description: 'Synthesia free trial includes 3 video scenes, access to 10+ AI avatars, 120+ languages, and text-to-speech. Perfect to test before committing.',
+    category: 'Video Generation', categorySlug: 'video-generation', logo: '🎭',
+    website: 'https://synthesia.io', pricing: 'Free Trial', startingPrice: '3 videos free', monthlyPrice: 0,
+    rating: 4.5, reviews: 31000, tags: ['Presenter', 'Avatar', 'Trial', '120+ Languages', 'Enterprise'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0', monthly: 0, features: ['3 video scenes', '10+ AI avatars', '120+ languages', 'No credit card'], popular: true },
+      { name: 'Starter (after trial)', price: '₹2,490/mo', monthly: 2490, features: ['10 videos/mo', '120+ avatars'] },
+    ]
+  },
+  {
+    id: 'ft4', name: 'Writesonic Trial', slug: 'writesonic-trial',
+    tagline: '10,000 free words with Writesonic',
+    description: 'Writesonic gives you 10,000 free words every month — no credit card needed. Access AI blog writer, ad copy generator, landing page builder and Chatsonic.',
+    category: 'Writing & Content', categorySlug: 'writing', logo: '🖊️',
+    website: 'https://writesonic.com', pricing: 'Free Trial', startingPrice: '10K words free', monthlyPrice: 0,
+    rating: 4.3, reviews: 43000, tags: ['Writing', 'SEO', 'Blog', 'Free Words', 'No Credit Card'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0/mo', monthly: 0, features: ['10,000 words/mo', 'All templates', 'Chatsonic', '25+ languages'], popular: true },
+      { name: 'Individual (paid)', price: '₹1,250/mo', monthly: 1250, features: ['Unlimited words', 'SEO checker'] },
+    ]
+  },
+  {
+    id: 'ft5', name: 'Runway Trial', slug: 'runway-trial',
+    tagline: '125 free credits to generate AI videos',
+    description: 'Runway gives every new user 125 one-time free credits to generate AI videos with Gen-3 Alpha. Experience professional video generation at no cost.',
+    category: 'Video Generation', categorySlug: 'video-generation', logo: '🎬',
+    website: 'https://runwayml.com', pricing: 'Free Trial', startingPrice: '125 credits free', monthlyPrice: 0,
+    rating: 4.6, reviews: 63000, tags: ['Video', 'Gen-3', 'Trial', 'Free Credits', 'AI Video'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0 one-time', monthly: 0, features: ['125 one-time credits', 'Gen-3 Turbo access', '720p output', 'Watermark'], popular: true },
+      { name: 'Standard (paid)', price: '₹1,250/mo', monthly: 1250, features: ['625 credits/mo', 'No watermark', '1080p'] },
+    ]
+  },
+  {
+    id: 'ft6', name: 'Adobe Firefly Trial', slug: 'adobe-firefly-trial',
+    tagline: '25 free generative credits every month',
+    description: 'Adobe Firefly gives 25 free generative credits per month with a free Adobe account — no Creative Cloud subscription needed. Generate images, vectors, and text effects.',
+    category: 'Image Generation', categorySlug: 'image-generation', logo: '🔥',
+    website: 'https://firefly.adobe.com', pricing: 'Free Trial', startingPrice: '25 credits/mo free', monthlyPrice: 0,
+    rating: 4.5, reviews: 48000, tags: ['Image', 'Adobe', 'Free Credits', 'Commercial Safe', 'Monthly'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['25 credits/mo', 'Image generation', 'Text effects', 'Web app', 'No CC needed'], popular: true },
+      { name: 'Creative Cloud', price: '₹1,650/mo', monthly: 1650, features: ['1000 credits/mo', 'All Firefly models'] },
+    ]
+  },
+  {
+    id: 'ft7', name: 'ElevenLabs Trial', slug: 'elevenlabs-trial',
+    tagline: '10,000 characters free every month',
+    description: 'ElevenLabs free tier gives 10,000 characters per month — enough for 10+ minutes of premium AI voice audio. Includes 3 custom voice clones and API access.',
+    category: 'Voice & Avatars', categorySlug: 'voice-avatars', logo: '🔊',
+    website: 'https://elevenlabs.io', pricing: 'Free Trial', startingPrice: '10K chars/mo free', monthlyPrice: 0,
+    rating: 4.8, reviews: 112000, tags: ['Voice', 'TTS', 'Free Tier', '10K Chars', 'Voice Clone'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Tier', price: '₹0/mo', monthly: 0, features: ['10,000 chars/mo', '3 custom voices', 'Basic API', 'Personal use'], popular: true },
+      { name: 'Starter', price: '₹415/mo', monthly: 415, features: ['30k chars/mo', 'Commercial license'] },
+    ]
+  },
+  {
+    id: 'ft8', name: 'Cursor Trial', slug: 'cursor-trial',
+    tagline: '2 weeks free Pro trial of Cursor AI editor',
+    description: 'Every new Cursor user gets a full 2-week Pro trial — unlimited AI completions, GPT-4o and Claude access, Composer, and background agents. No credit card required.',
+    category: 'Coding', categorySlug: 'coding', logo: '⚡',
+    website: 'https://cursor.sh', pricing: 'Free Trial', startingPrice: '14 days free Pro', monthlyPrice: 0,
+    rating: 4.9, reviews: 98000, tags: ['Coding', 'IDE', 'Trial', '14 Days', 'Pro Access'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free Trial', price: '₹0 for 14 days', monthly: 0, features: ['Full Pro access', 'GPT-4o + Claude', 'Unlimited completions', 'Composer', 'No credit card'], popular: true },
+      { name: 'Pro (after trial)', price: '₹1,660/mo', monthly: 1660, features: ['Unlimited completions', 'All models', 'Background agent'] },
+    ]
+  },
+  {
+    id: 'ft9', name: 'Midjourney Trial', slug: 'midjourney-trial',
+    tagline: 'Try Midjourney via Discord free',
+    description: 'New Midjourney users historically got 25 free image generations. While the free tier has changed, you can still explore via Discord server to see outputs before paying.',
+    category: 'Image Generation', categorySlug: 'image-generation', logo: '🎨',
+    website: 'https://midjourney.com', pricing: 'Free Trial', startingPrice: 'Discord preview', monthlyPrice: 0,
+    rating: 4.8, reviews: 156000, tags: ['Image', 'Art', 'Discord', 'Preview', 'Trial'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Discord Preview', price: 'Free to view', monthly: 0, features: ['View community images', 'Try Discord bot', 'See capabilities', 'No generation'], popular: true },
+      { name: 'Basic', price: '₹830/mo', monthly: 830, features: ['200 generations/mo', 'Web + Discord', 'Commercial use'] },
+    ]
+  },
+  {
+    id: 'ft10', name: 'Gamma Trial', slug: 'gamma-trial',
+    tagline: '400 free AI credits for presentations',
+    description: 'Gamma gives every new user 400 free AI credits — enough for 4-5 full presentations, websites, or documents. No time limit, no credit card required.',
+    category: 'Presentations', categorySlug: 'presentations', logo: '✨',
+    website: 'https://gamma.app', pricing: 'Free Trial', startingPrice: '400 credits free', monthlyPrice: 0,
+    rating: 4.6, reviews: 45000, tags: ['Presentations', 'Free Credits', 'No Limit', 'Slides', 'Documents'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0', monthly: 0, features: ['400 AI credits', 'Unlimited decks', 'Share & publish', 'Gamma branding'], popular: true },
+      { name: 'Plus', price: '₹830/mo', monthly: 830, features: ['Unlimited AI', 'No branding', 'Custom fonts', 'Analytics'] },
+    ]
+  },
+]
+
+// Merge free trial tools into main array
+tools.push(...freeTrialTools)
+
 export const featuredTools = tools.filter(t => t.featured)
 export const newTools = tools.filter(t => t.new)
 

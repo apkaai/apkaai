@@ -5,7 +5,7 @@ import CategoryCard from '@/components/CategoryCard'
 import { featuredTools, categories, tools } from '@/lib/tools-data'
 
 const stats = [
-  { icon: Globe,      label: 'AI Tools',     value: '60+' },
+  { icon: Globe,      label: 'AI Tools',     value: '70+' },
   { icon: Users,      label: 'Happy Users',  value: '10K+' },
   { icon: Star,       label: 'Avg Rating',   value: '4.7' },
   { icon: TrendingUp, label: 'Categories',   value: '15' },
@@ -44,7 +44,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            India&apos;s #1 AI marketplace. Find, compare and access ChatGPT, Claude, Midjourney, Cursor and 60+ more AI tools — all in one place.
+            Discover {tools.length}+ AI tools across 15 categories. Find the perfect AI for your workflow.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">

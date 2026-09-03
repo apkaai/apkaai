@@ -29,6 +29,7 @@ async function submitContact(req, res, next) {
       email: email.trim().toLowerCase(),
       subject: subject ? subject.trim().slice(0, 200) : 'General Inquiry',
       message: message.trim(),
+      sentTo: 'coolakpandey@gmail.com',  // Ashutosh Kumar Pandey
       createdAt: new Date().toISOString(),
       status: 'new',
     }
