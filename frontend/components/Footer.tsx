@@ -4,14 +4,14 @@ import { Twitter, Linkedin, Github, Mail, MapPin, BarChart3 } from 'lucide-react
 const MAPS_URL = 'https://maps.google.com/?q=Ace+City,+Greater+Noida,+Uttar+Pradesh,+India'
 const EMAIL    = 'ashutoshkumarpandey@apkaai.com'
 
-/* ── Logo matching the A+bolt image ── */
+/* ── Logo matching the provided A+bolt image ── */
 function LogoMark({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="40" height="40" rx="9" fill="#6D28D9"/>
-      <path d="M6.5 31 L13.5 10 H19 L26 31 H21.5 L20 26 H12.5 L11 31 Z M13.5 23 H19 L16.5 15 Z"
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="22" fill="#7C3AED"/>
+      <path d="M14 82 L36 20 H64 L86 82 H70 L66 70 H34 L30 82 Z M38 58 H62 L50 28 Z"
         fill="white" fillRule="evenodd"/>
-      <path d="M20.5 9 L14 21 H19 L13.5 32 L30 18 H24 L29 9 Z" fill="white" fillOpacity="0.97"/>
+      <path d="M58 18 L42 52 H54 L38 84 L76 46 H63 L78 18 Z" fill="white"/>
     </svg>
   )
 }

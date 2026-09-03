@@ -1,15 +1,15 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import ToolCard from '@/components/ToolCard'
 import CategoryCard from '@/components/CategoryCard'
 import { tools, categories } from '@/lib/tools-data'
 
-// ── Pricing options — "Freemium" displayed as "Premium" per requirement ───────
 const PRICING_FILTERS = [
   { value: 'All',        label: 'All' },
   { value: 'Free',       label: 'Free' },
-  { value: 'Freemium',   label: 'Premium' },   // shown as Premium
+  { value: 'Freemium',   label: 'Premium' },
   { value: 'Paid',       label: 'Paid' },
   { value: 'Free Trial', label: 'Free Trial' },
 ]
@@ -18,20 +18,33 @@ const SORT_OPTIONS = [
   { label: 'Most Popular', value: 'popular' },
   { label: 'Highest Rated', value: 'rating' },
   { label: 'Newest First',  value: 'new' },
-  { label: 'Name A–Z',      value: 'name' },
+  { label: 'Name A-Z',      value: 'name' },
 ]
 
-export default function ToolsPage() {
-  const [search, setSearch]             = useState('')
-  const [activeCategory, setActiveCategory] = useState('all')
+// Inner component that uses useSearchParams (must be inside Suspense)
+function ToolsInner() {
+  const searchParams                    = useSearchParams()
+  const router                          = useRouter()
+  const initialSearch                   = searchParams.get('search') || ''
+  const initialCategory                 = searchParams.get('cat') || 'all'
+
+  const [search, setSearch]             = useState(initialSearch)
+  const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [activePricing, setActivePricing]   = useState('All')
   const [sortBy, setSortBy]             = useState('popular')
   const [showFilters, setShowFilters]   = useState(false)
 
+  // Sync URL param changes (e.g. back/forward nav)
+  useEffect(() => {
+    const q = searchParams.get('search') || ''
+    if (q !== search) setSearch(q)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
   const filtered = useMemo(() => {
     let result = [...tools]
 
-    // Search — name, tagline, description, tags
+    // Search across name, tagline, description, tags, category
     if (search.trim()) {
       const q = search.toLowerCase().trim()
       result = result.filter(t =>
@@ -39,16 +52,17 @@ export default function ToolsPage() {
         t.tagline.toLowerCase().includes(q) ||
         t.description.toLowerCase().includes(q) ||
         t.tags.some(tag => tag.toLowerCase().includes(q)) ||
-        t.category.toLowerCase().includes(q)
+        t.category.toLowerCase().includes(q) ||
+        t.categorySlug.toLowerCase().includes(q)
       )
     }
 
-    // Category filter
+    // Category
     if (activeCategory !== 'all') {
       result = result.filter(t => t.categorySlug === activeCategory)
     }
 
-    // Pricing filter — 'Freemium' in data shown as 'Premium' in UI
+    // Pricing
     if (activePricing !== 'All') {
       result = result.filter(t => t.pricing === activePricing)
     }
@@ -58,13 +72,22 @@ export default function ToolsPage() {
       case 'rating': result.sort((a, b) => b.rating - a.rating); break
       case 'new':    result.sort((a, b) => (b.new ? 1 : 0) - (a.new ? 1 : 0)); break
       case 'name':   result.sort((a, b) => a.name.localeCompare(b.name)); break
-      default:       result.sort((a, b) => b.reviews - a.reviews) // popular
+      default:       result.sort((a, b) => b.reviews - a.reviews)
     }
-
     return result
   }, [search, activeCategory, activePricing, sortBy])
 
   const activeFilterCount = (activeCategory !== 'all' ? 1 : 0) + (activePricing !== 'All' ? 1 : 0)
+
+  // Update URL when search changes
+  const handleSearch = (val: string) => {
+    setSearch(val)
+    if (val.trim()) {
+      router.replace(`/tools?search=${encodeURIComponent(val.trim())}`, { scroll: false })
+    } else {
+      router.replace('/tools', { scroll: false })
+    }
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-4">
@@ -72,9 +95,7 @@ export default function ToolsPage() {
 
         {/* Page Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">
-            All AI Tools
-          </h1>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4">All AI Tools</h1>
           <p className="text-slate-400 text-lg max-w-2xl mx-auto">
             Discover {tools.length}+ AI tools across 15 categories. Find the perfect AI for your workflow.
           </p>
@@ -87,24 +108,20 @@ export default function ToolsPage() {
             <input
               type="search"
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               placeholder="Search AI tools (e.g. ChatGPT, Midjourney, Cursor...)"
               className="w-full bg-[#0F0A1E] border border-purple-800/40 rounded-xl pl-12 pr-10 py-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+              <button onClick={() => handleSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          {/* Sort dropdown */}
           <div className="relative">
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              className="appearance-none bg-[#0F0A1E] border border-purple-800/40 rounded-xl pl-4 pr-10 py-3.5 text-sm text-white focus:outline-none focus:border-purple-500 cursor-pointer min-w-[160px]"
-            >
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+              className="appearance-none bg-[#0F0A1E] border border-purple-800/40 rounded-xl pl-4 pr-10 py-3.5 text-sm text-white focus:outline-none focus:border-purple-500 cursor-pointer min-w-[160px]">
               {SORT_OPTIONS.map(o => (
                 <option key={o.value} value={o.value} className="bg-[#0F0A1E]">{o.label}</option>
               ))}
@@ -112,7 +129,6 @@ export default function ToolsPage() {
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           </div>
 
-          {/* Filters toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 py-3.5 rounded-xl text-sm font-medium border transition-all ${
@@ -138,25 +154,20 @@ export default function ToolsPage() {
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">PRICING</p>
               <div className="flex flex-wrap gap-2">
                 {PRICING_FILTERS.map(p => (
-                  <button
-                    key={p.value}
-                    onClick={() => setActivePricing(p.value)}
+                  <button key={p.value} onClick={() => setActivePricing(p.value)}
                     className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all border ${
                       activePricing === p.value
                         ? 'bg-purple-600 border-purple-500 text-white'
                         : 'bg-purple-950/30 border-purple-800/40 text-slate-300 hover:border-purple-600'
-                    }`}
-                  >
+                    }`}>
                     {p.label}
                   </button>
                 ))}
               </div>
             </div>
             {(activeCategory !== 'all' || activePricing !== 'All') && (
-              <button
-                onClick={() => { setActiveCategory('all'); setActivePricing('All') }}
-                className="text-xs text-purple-400 hover:text-purple-300 underline"
-              >
+              <button onClick={() => { setActiveCategory('all'); setActivePricing('All') }}
+                className="text-xs text-purple-400 hover:text-purple-300 underline">
                 Clear all filters
               </button>
             )}
@@ -165,26 +176,21 @@ export default function ToolsPage() {
 
         {/* Category Pills */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
-          <button
-            onClick={() => setActiveCategory('all')}
+          <button onClick={() => setActiveCategory('all')}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
               activeCategory === 'all'
                 ? 'bg-purple-600 border-purple-500 text-white'
                 : 'bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-600'
-            }`}
-          >
+            }`}>
             All
           </button>
           {categories.map(cat => (
-            <button
-              key={cat.slug}
-              onClick={() => setActiveCategory(cat.slug)}
+            <button key={cat.slug} onClick={() => setActiveCategory(cat.slug)}
               className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
                 activeCategory === cat.slug
                   ? 'bg-purple-600 border-purple-500 text-white'
                   : 'bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-600'
-              }`}
-            >
+              }`}>
               <span>{cat.emoji}</span>
               <span className="hidden sm:inline">{cat.name}</span>
             </button>
@@ -195,17 +201,17 @@ export default function ToolsPage() {
         <div className="mb-5 flex items-center justify-between">
           <p className="text-slate-400 text-sm">
             Showing <span className="text-white font-semibold">{filtered.length}</span> tools
-            {search && <span> for &ldquo;<span className="text-purple-400">{search}</span>&rdquo;</span>}
+            {search && (
+              <span> for &quot;<span className="text-purple-400">{search}</span>&quot;</span>
+            )}
             {activePricing !== 'All' && (
-              <span> · <span className="text-purple-400">{PRICING_FILTERS.find(p => p.value === activePricing)?.label}</span></span>
+              <span> &middot; <span className="text-purple-400">{PRICING_FILTERS.find(p => p.value === activePricing)?.label}</span></span>
             )}
           </p>
           {(search || activeCategory !== 'all' || activePricing !== 'All') && (
-            <button
-              onClick={() => { setSearch(''); setActiveCategory('all'); setActivePricing('All') }}
-              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
-            >
-              <X className="w-3 h-3" /> Clear
+            <button onClick={() => { handleSearch(''); setActiveCategory('all'); setActivePricing('All') }}
+              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1">
+              <X className="w-3 h-3" /> Clear all
             </button>
           )}
         </div>
@@ -229,15 +235,14 @@ export default function ToolsPage() {
                 : 'Try clearing your filters'}
             </p>
             <button
-              onClick={() => { setSearch(''); setActiveCategory('all'); setActivePricing('All') }}
-              className="btn-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm"
-            >
-              Reset Filters
+              onClick={() => { handleSearch(''); setActiveCategory('all'); setActivePricing('All') }}
+              className="btn-primary text-white font-semibold px-6 py-2.5 rounded-lg text-sm">
+              Reset All Filters
             </button>
           </div>
         )}
 
-        {/* All Categories Section (shown when no filter active) */}
+        {/* All Categories (shown only when no filters active) */}
         {activeCategory === 'all' && !search && activePricing === 'All' && (
           <section className="mt-20" id="categories">
             <div className="mb-8">
@@ -253,5 +258,18 @@ export default function ToolsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+// Wrap in Suspense because useSearchParams requires it in Next.js 14
+export default function ToolsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-24 flex items-center justify-center">
+        <div className="text-slate-400">Loading tools...</div>
+      </div>
+    }>
+      <ToolsInner />
+    </Suspense>
   )
 }

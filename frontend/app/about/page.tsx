@@ -3,7 +3,7 @@ import { Mail, Linkedin, MapPin, Zap, Users, Globe, Star, TrendingUp } from 'luc
 
 const stats = [
   { icon: Globe,      value: '70+',  label: 'AI Tools Curated' },
-  { icon: Users,      value: '10K+', label: 'Users Helped' },
+  { icon: Users,      value: '280+', label: 'Users Helped' },
   { icon: Star,       value: '4.7',  label: 'Average Rating' },
   { icon: TrendingUp, value: '15',   label: 'Categories' },
 ]

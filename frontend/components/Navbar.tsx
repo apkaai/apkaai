@@ -13,32 +13,57 @@ const navLinks = [
   { label: 'Contact',    href: '/contact' },
 ]
 
-/* ── Logo matching the A+bolt image provided ────────────────────────── */
+/*
+ * Logo: matches the provided image exactly —
+ *   - Bright purple square with rounded corners
+ *   - Large bold white A
+ *   - White lightning bolt overlaid, cutting diagonally through the right leg of the A
+ */
 function LogoMark({ size = 34 }: { size?: number }) {
   return (
     <svg
-      width={size} height={size}
-      viewBox="0 0 40 40"
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="ApkaAI logo"
+      aria-label="ApkaAI"
     >
-      {/* Rounded square background — deep purple like the image */}
-      <rect width="40" height="40" rx="9" fill="#6D28D9"/>
+      {/* Purple rounded square background */}
+      <rect width="100" height="100" rx="22" fill="#7C3AED" />
 
-      {/* Letter A — wide, bold, centered */}
+      {/* ── Letter A ─────────────────────────────────────────────
+          Wide, bold, occupying most of the square.
+          Left leg, right leg, crossbar, open bottom.
+      ───────────────────────────────────────────────────────── */}
       <path
-        d="M6.5 31 L13.5 10 H19 L26 31 H21.5 L20 26 H12.5 L11 31 Z
-           M13.5 23 H19 L16.5 15 Z"
+        d="
+          M14 82
+          L36 20
+          H64
+          L86 82
+          H70
+          L66 70
+          H34
+          L30 82
+          Z
+
+          M38 58
+          H62
+          L50 28
+          Z
+        "
         fill="white"
         fillRule="evenodd"
       />
 
-      {/* Lightning bolt — overlaps right leg of A, going bottom-right to top-right */}
+      {/* ── Lightning bolt ────────────────────────────────────────
+          Cuts through the right leg of the A diagonally,
+          pointing bottom-left to top-right like in the image.
+      ───────────────────────────────────────────────────────── */}
       <path
-        d="M20.5 9 L14 21 H19 L13.5 32 L30 18 H24 L29 9 Z"
+        d="M58 18 L42 52 H54 L38 84 L76 46 H63 L78 18 Z"
         fill="white"
-        fillOpacity="0.97"
       />
     </svg>
   )
@@ -51,7 +76,6 @@ export default function Navbar() {
   const [query, setQuery]           = useState('')
   const searchInputRef              = useRef<HTMLInputElement>(null)
 
-  /* focus input when search bar opens */
   useEffect(() => {
     if (searchOpen && searchInputRef.current) {
       searchInputRef.current.focus()
@@ -66,8 +90,6 @@ export default function Navbar() {
     setQuery('')
     router.push(`/tools?search=${encodeURIComponent(q)}`)
   }
-
-  const toggleSearch = () => setSearchOpen(prev => !prev)
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-purple-900/30 backdrop-blur-xl bg-[#08051A]/80">
@@ -103,12 +125,10 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-
-          {/* ── Search button (top-right) — now fully functional ── */}
+          {/* Search button */}
           <button
-            onClick={toggleSearch}
+            onClick={() => setSearchOpen(prev => !prev)}
             aria-label="Search AI tools"
-            aria-expanded={searchOpen}
             className={`p-2 rounded-lg transition-all ${
               searchOpen
                 ? 'text-white bg-purple-700/40'
@@ -135,7 +155,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Search bar — slides down when open ── */}
+      {/* Search bar */}
       {searchOpen && (
         <div className="border-t border-purple-900/30 bg-[#0D0826] px-4 py-3 shadow-lg">
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
@@ -156,9 +176,6 @@ export default function Navbar() {
                 Search
               </button>
             </div>
-            <p className="text-slate-600 text-xs mt-2 pl-1">
-              Press Enter or click Search to find tools
-            </p>
           </form>
         </div>
       )}

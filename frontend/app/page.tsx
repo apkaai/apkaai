@@ -6,7 +6,7 @@ import { featuredTools, categories, tools } from '@/lib/tools-data'
 
 const stats = [
   { icon: Globe,      label: 'AI Tools',     value: '70+' },
-  { icon: Users,      label: 'Happy Users',  value: '10K+' },
+  { icon: Users,      label: 'Happy Users',  value: '280+' },
   { icon: Star,       label: 'Avg Rating',   value: '4.7' },
   { icon: TrendingUp, label: 'Categories',   value: '15' },
 ]
