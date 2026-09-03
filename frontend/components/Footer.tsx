@@ -1,29 +1,9 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Twitter, Linkedin, Github, Mail, MapPin, BarChart3 } from 'lucide-react'
 
 const MAPS_URL = 'https://maps.google.com/?q=Ace+City,+Greater+Noida,+Uttar+Pradesh,+India'
 const EMAIL    = 'ashutoshkumarpandey@apkaai.com'
-
-/* ── Logo matching the provided A+bolt image ── */
-function LogoMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" rx="24" fill="#7B2FBE"/>
-      <rect width="100" height="100" rx="24" fill="url(#fgrad)"/>
-      {/* A */}
-      <path d="M18 84 L42 16 H58 L82 84 H68 L63 70 H37 L32 84 Z M41 58 H59 L50 30 Z"
-        fill="white" fillRule="evenodd"/>
-      {/* Bolt inside A triangle */}
-      <path d="M57 32 L47 46 H53 L43 60 L61 44 H55 Z" fill="white"/>
-      <defs>
-        <linearGradient id="fgrad" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#8B35D6"/>
-          <stop offset="100%" stopColor="#6B21A8"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  )
-}
 
 const footerLinks = {
   'AI Tools': [
@@ -64,7 +44,7 @@ export default function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <LogoMark size={28} />
+              <Image src="/logo.svg" alt="ApkaAI Logo" width={28} height={28} className="rounded-lg flex-shrink-0" />
               <span className="text-xl font-extrabold text-white tracking-tight">
                 apka<span className="text-purple-400">AI</span>
               </span>

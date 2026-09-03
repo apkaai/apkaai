@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Menu, X, Search, BarChart3 } from 'lucide-react'
+import Image from 'next/image'
 
 const navLinks = [
   { label: 'All Tools',  href: '/tools' },
@@ -12,85 +13,6 @@ const navLinks = [
   { label: 'Blog',       href: '/blog' },
   { label: 'Contact',    href: '/contact' },
 ]
-
-/*
- * Logo — pixel-faithful reproduction of the provided image:
- *
- *  • Vivid purple square, heavily rounded corners
- *  • Large sans-serif white A (no serifs, open bottom, crossbar mid-height)
- *  • White lightning bolt INSIDE the triangle of the A,
- *    centered in the open space, does not exit the letter shape
- *  • Bolt: top-right → bottom-left direction, narrow head, wide body
- */
-function LogoMark({ size = 34 }: { size?: number }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="ApkaAI logo"
-    >
-      {/* Vivid purple background with large radius matching the image */}
-      <rect width="100" height="100" rx="24" fill="#7B2FBE" />
-      <rect width="100" height="100" rx="24" fill="url(#logoGrad)" />
-
-      {/*
-        ── Letter A ─────────────────────────────────────────────────────
-        Clean sans-serif: left leg, right leg, crossbar, open at bottom.
-        Coordinates tuned so the inner triangle is visible and spacious
-        so the bolt has room.
-      */}
-      <path
-        d="
-          M18 84
-          L42 16
-          H58
-          L82 84
-          H68
-          L63 70
-          H37
-          L32 84
-          Z
-
-          M41 58
-          H59
-          L50 30
-          Z
-        "
-        fill="white"
-        fillRule="evenodd"
-      />
-
-      {/*
-        ── Lightning bolt ────────────────────────────────────────────────
-        Lives INSIDE the A triangle (between apex y=30 and crossbar y=58).
-        Tilted top-right → bottom-left, compact, clearly readable.
-        Upper point: (58, 32)  Lower point: (42, 56)
-      */}
-      <path
-        d="
-          M57 32
-          L47 46
-          H53
-          L43 60
-          L61 44
-          H55
-          Z
-        "
-        fill="white"
-      />
-
-      <defs>
-        <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="#8B35D6" />
-          <stop offset="100%" stopColor="#6B21A8" />
-        </linearGradient>
-      </defs>
-    </svg>
-  )
-}
 
 export default function Navbar() {
   const router                      = useRouter()
@@ -118,10 +40,17 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-purple-900/30 backdrop-blur-xl bg-[#08051A]/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
+        {/* Logo — uses the PNG/SVG image file, no SVG code in component */}
         <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
-          <div className="group-hover:scale-105 transition-transform duration-200">
-            <LogoMark size={34} />
+          <div className="group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+            <Image
+              src="/logo.svg"
+              alt="ApkaAI Logo"
+              width={36}
+              height={36}
+              priority
+              className="rounded-lg"
+            />
           </div>
           <span className="text-xl font-extrabold text-white tracking-tight">
             apka<span className="text-purple-400">AI</span>
@@ -166,7 +95,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search bar */}
       {searchOpen && (
         <div className="border-t border-purple-900/30 bg-[#0D0826] px-4 py-3 shadow-lg">
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
