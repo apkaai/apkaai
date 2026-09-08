@@ -30,7 +30,7 @@ const footerLinks = {
 
 const socialLinks = [
   { icon: Twitter,  href: 'https://x.com/apkaAI2026',                            label: 'Twitter',  color: 'hover:border-sky-500 hover:text-sky-400' },
-  { icon: Linkedin, href: 'https://www.linkedin.com/in/apkaai-3784a1433/', label: 'LinkedIn', color: 'hover:border-blue-500 hover:text-blue-400' },
+  { icon: Linkedin, href: 'https://www.linkedin.com/company/apkaai/', label: 'LinkedIn', color: 'hover:border-blue-500 hover:text-blue-400' },
   { icon: Github,   href: 'https://github.com/AshutoshPanday/apkaai',      label: 'GitHub',   color: 'hover:border-slate-400 hover:text-white' },
   { icon: Mail,     href: `mailto:${EMAIL}`,                               label: 'Email',    color: 'hover:border-purple-500 hover:text-purple-400' },
 ]
@@ -92,7 +92,7 @@ export default function Footer() {
             </div>
 
             {/* LinkedIn badge */}
-            <a href="https://www.linkedin.com/in/apkaai-3784a1433/" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.linkedin.com/company/apkaai/" target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-900/20 border border-blue-700/40 hover:border-blue-500 text-blue-300 hover:text-white text-sm font-medium transition-all">
               <Linkedin className="w-4 h-4" />
               Follow on LinkedIn
