@@ -111,3 +111,66 @@ CREATE INDEX IF NOT EXISTS idx_cloud_estimates_created ON cloud_estimates(create
 CREATE OR REPLACE TRIGGER cloud_estimates_updated_at
   BEFORE UPDATE ON cloud_estimates
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── user_history ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_history (
+  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  event_type    VARCHAR(30)  NOT NULL CHECK (event_type IN ('view','search','compare','cart_add','cart_remove')),
+  tool_id       VARCHAR(50),
+  tool_slug     VARCHAR(100),
+  tool_name     VARCHAR(200),
+  tool_logo     VARCHAR(10),
+  tool_category VARCHAR(200),
+  search_query  VARCHAR(300),
+  extra         JSONB        DEFAULT '{}',
+  created_at    TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_history_user_id    ON user_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_history_created_at ON user_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_history_event_type ON user_history(event_type);
+
+-- ── orders ────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS orders (
+  order_id      UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  status        VARCHAR(30)  NOT NULL DEFAULT 'pending'
+                             CHECK (status IN ('pending','confirmed','processing','completed','cancelled','refunded')),
+  subtotal      NUMERIC(12,2) NOT NULL DEFAULT 0,
+  discount      NUMERIC(12,2) NOT NULL DEFAULT 0,
+  tax           NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total         NUMERIC(12,2) NOT NULL DEFAULT 0,
+  coupon_code   VARCHAR(50),
+  payment_method VARCHAR(50) DEFAULT 'pending',
+  payment_id    VARCHAR(200),
+  notes         TEXT,
+  created_at    TIMESTAMPTZ  DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ  DEFAULT NOW()
+);
+
+-- ── order_items ───────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS order_items (
+  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id      UUID         NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+  tool_id       VARCHAR(50)  NOT NULL,
+  tool_name     VARCHAR(200) NOT NULL,
+  tool_slug     VARCHAR(100) NOT NULL,
+  tool_logo     VARCHAR(10),
+  tool_category VARCHAR(200),
+  plan_name     VARCHAR(100) NOT NULL,
+  plan_price    VARCHAR(100) NOT NULL,
+  plan_monthly  NUMERIC(12,2) NOT NULL DEFAULT 0,
+  billing_cycle VARCHAR(20)  NOT NULL DEFAULT 'monthly',
+  quantity      INTEGER      NOT NULL DEFAULT 1,
+  created_at    TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_orders_user_id    ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status     ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+
+CREATE OR REPLACE TRIGGER orders_updated_at
+  BEFORE UPDATE ON orders
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

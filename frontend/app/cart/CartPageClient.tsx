@@ -1,14 +1,22 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   ShoppingCart, ArrowRight, Trash2, RotateCcw, ArrowLeft,
-  Tag, Shield, Zap, Check, Info
+  Tag, Shield, Zap, Check, Info, Loader2, PackageCheck
 } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import PlanModal from '@/components/cart/PlanModal'
 import type { CartItem } from '@/lib/cart-context'
 import { tools } from '@/lib/tools-data'
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
+
+function getToken() {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('apkaai_token') || sessionStorage.getItem('apkaai_token')
+}
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 interface Toast { id: number; message: string; type: 'success' | 'info' }
@@ -97,14 +105,17 @@ function FullCartItemRow({
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function CartPageClient() {
+  const router = useRouter()
   const {
     items, itemCount, subtotal,
     removeItem, clearCart,
   } = useCart()
   const { toasts, show: showToast } = useToast()
   const [changingItem, setChangingItem] = useState<CartItem | null>(null)
-  const [coupon, setCoupon]         = useState('')
+  const [coupon, setCoupon]             = useState('')
   const [couponApplied, setCouponApplied] = useState(false)
+  const [checkingOut, setCheckingOut]   = useState(false)
+  const [orderPlaced, setOrderPlaced]   = useState<string | null>(null) // orderId after success
 
   const tax      = Math.round(subtotal * 0.18)
   const discount = couponApplied ? Math.round(subtotal * 0.1) : 0
@@ -128,176 +139,264 @@ export default function CartPageClient() {
     }
   }
 
+  async function handleCheckout() {
+    const token = getToken()
+    if (!token) {
+      showToast('Please sign in to place an order', 'info')
+      router.push('/signin')
+      return
+    }
+
+    setCheckingOut(true)
+    try {
+      const res = await fetch(`${API}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items,
+          subtotal,
+          discount,
+          tax,
+          total,
+          couponCode: couponApplied ? 'APKAAI10' : null,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        showToast(data.error || 'Failed to place order', 'info')
+        setCheckingOut(false)
+        return
+      }
+
+      // Success — clear cart and show confirmation
+      clearCart()
+      setOrderPlaced(data.orderId)
+    } catch {
+      showToast('Network error. Please try again.', 'info')
+      setCheckingOut(false)
+    }
+  }
+
   return (
     <div className="min-h-screen pt-24 pb-20 px-4">
       <div className="max-w-6xl mx-auto">
 
-        {/* Breadcrumb */}
-        <Link href="/tools" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-8 transition-colors group">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Continue Shopping
-        </Link>
-
-        {/* Page title */}
-        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <ShoppingCart className="w-7 h-7 text-purple-400" />
-            <h1 className="text-3xl font-extrabold text-white">Your Cart</h1>
-            {itemCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full bg-purple-600/30 border border-purple-600/50 text-purple-300 text-sm font-semibold">
-                {itemCount} {itemCount === 1 ? 'item' : 'items'}
-              </span>
-            )}
-          </div>
-          {itemCount > 0 && (
-            <button
-              onClick={() => { clearCart(); showToast('Cart cleared') }}
-              className="text-sm text-red-400/70 hover:text-red-400 flex items-center gap-1.5 transition-colors"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear all
-            </button>
-          )}
-        </div>
-
-        {/* ── Empty state ── */}
-        {items.length === 0 ? (
+        {/* ── Order placed success screen ── */}
+        {orderPlaced && (
           <div className="text-center py-24">
-            <div className="w-24 h-24 rounded-3xl bg-purple-900/20 border border-purple-800/30 flex items-center justify-center mx-auto mb-6">
-              <ShoppingCart className="w-10 h-10 text-purple-400/50" />
+            <div className="w-24 h-24 rounded-3xl bg-emerald-900/20 border border-emerald-700/30 flex items-center justify-center mx-auto mb-6">
+              <PackageCheck className="w-12 h-12 text-emerald-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">Your cart is empty</h2>
-            <p className="text-slate-400 max-w-md mx-auto mb-8">
-              Explore our 70+ AI tools and add the ones you want to your cart. No account required to browse.
+            <h2 className="text-3xl font-extrabold text-white mb-3">Order Placed!</h2>
+            <p className="text-slate-400 max-w-md mx-auto mb-2">
+              Your order has been confirmed successfully.
             </p>
-            <Link
-              href="/tools"
-              className="inline-flex items-center gap-2 btn-primary text-white font-bold px-8 py-3.5 rounded-xl shadow-glow-sm"
-            >
-              Explore AI Tools <ArrowRight className="w-4 h-4" />
-            </Link>
+            <p className="text-purple-300 font-mono text-sm mb-8">
+              Order ID: #{orderPlaced.slice(0, 8).toUpperCase()}
+            </p>
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              <Link
+                href="/orders"
+                className="inline-flex items-center gap-2 btn-primary text-white font-bold px-8 py-3.5 rounded-xl"
+              >
+                View Order History <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/tools"
+                className="inline-flex items-center gap-2 border border-purple-700/40 text-slate-300 hover:text-white font-semibold px-8 py-3.5 rounded-xl transition-all hover:border-purple-500"
+              >
+                Continue Shopping
+              </Link>
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        )}
 
-            {/* ── Items column (2/3) ── */}
-            <div className="lg:col-span-2 space-y-3">
-              {items.map(item => (
-                <FullCartItemRow
-                  key={item.key}
-                  item={item}
-                  onRemove={handleRemove}
-                  onChangePlan={handleChangePlan}
-                />
-              ))}
+        {/* ── Normal cart view ── */}
+        {!orderPlaced && (
+          <>
+            {/* Breadcrumb */}
+            <Link href="/tools" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-sm mb-8 transition-colors group">
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              Continue Shopping
+            </Link>
 
-              {/* Trust badges */}
-              <div className="grid grid-cols-3 gap-3 mt-6">
-                {[
-                  { icon: <Shield className="w-4 h-4" />, label: 'Secure Checkout' },
-                  { icon: <Zap className="w-4 h-4" />,    label: 'Instant Access' },
-                  { icon: <Check className="w-4 h-4" />,  label: 'Cancel Anytime' },
-                ].map(b => (
-                  <div key={b.label} className="flex items-center gap-2 p-3 rounded-xl bg-purple-950/20 border border-purple-900/30 text-xs text-slate-400">
-                    <span className="text-purple-400">{b.icon}</span>
-                    {b.label}
-                  </div>
-                ))}
+            {/* Page title */}
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="w-7 h-7 text-purple-400" />
+                <h1 className="text-3xl font-extrabold text-white">Your Cart</h1>
+                {itemCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-purple-600/30 border border-purple-600/50 text-purple-300 text-sm font-semibold">
+                    {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                  </span>
+                )}
               </div>
+              {itemCount > 0 && (
+                <button
+                  onClick={() => { clearCart(); showToast('Cart cleared') }}
+                  className="text-sm text-red-400/70 hover:text-red-400 flex items-center gap-1.5 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Clear all
+                </button>
+              )}
             </div>
 
-            {/* ── Order summary sidebar (1/3) ── */}
-            <div className="space-y-4">
-              <div className="glow-border rounded-2xl p-6 bg-[#0F0A1E] sticky top-24">
-                <h2 className="text-white font-bold text-lg mb-5">Order Summary</h2>
-
-                <div className="space-y-3 text-sm mb-5">
-                  <div className="flex justify-between text-slate-400">
-                    <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-                    <span className="text-white">₹{subtotal.toLocaleString('en-IN')}</span>
-                  </div>
-                  {couponApplied && (
-                    <div className="flex justify-between text-emerald-400">
-                      <span className="flex items-center gap-1">
-                        <Tag className="w-3.5 h-3.5" /> Discount (10%)
-                      </span>
-                      <span>−₹{discount.toLocaleString('en-IN')}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-slate-400">
-                    <span className="flex items-center gap-1">
-                      GST (18%)
-                      <span title="Taxes calculated at checkout" className="cursor-help">
-                        <Info className="w-3 h-3 opacity-50" />
-                      </span>
-                    </span>
-                    <span className="text-white">₹{tax.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-white border-t border-purple-900/30 pt-3 mt-1 text-base">
-                    <span>Total</span>
-                    <span className="text-purple-300">₹{total.toLocaleString('en-IN')}</span>
-                  </div>
+            {/* ── Empty state ── */}
+            {items.length === 0 ? (
+              <div className="text-center py-24">
+                <div className="w-24 h-24 rounded-3xl bg-purple-900/20 border border-purple-800/30 flex items-center justify-center mx-auto mb-6">
+                  <ShoppingCart className="w-10 h-10 text-purple-400/50" />
                 </div>
-
-                {/* Coupon */}
-                {!couponApplied && (
-                  <div className="flex gap-2 mb-5">
-                    <input
-                      type="text"
-                      placeholder="Coupon code"
-                      value={coupon}
-                      onChange={e => setCoupon(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && applyCoupon()}
-                      className="flex-1 bg-purple-950/40 border border-purple-800/40 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
-                    />
-                    <button
-                      onClick={applyCoupon}
-                      className="px-3 py-2 bg-purple-600/30 border border-purple-700/50 text-purple-300 text-sm rounded-lg hover:bg-purple-600/50 transition-colors font-medium"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                )}
-                {couponApplied && (
-                  <div className="flex items-center gap-2 mb-5 p-2.5 rounded-lg bg-emerald-900/20 border border-emerald-700/30 text-emerald-400 text-xs">
-                    <Check className="w-4 h-4" />
-                    Coupon &ldquo;APKAAI10&rdquo; applied — 10% off!
-                  </div>
-                )}
-
-                {/* Checkout CTA */}
-                <button
-                  className="w-full btn-primary text-white font-bold py-3.5 rounded-xl shadow-glow-sm flex items-center justify-center gap-2 text-sm"
-                  onClick={() => showToast('Checkout coming soon — stay tuned!', 'info')}
-                >
-                  Proceed to Checkout
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <p className="text-center text-xs text-slate-500 mt-3">
-                  Payment gateway integration coming soon (Razorpay / Stripe).
+                <h2 className="text-2xl font-bold text-white mb-3">Your cart is empty</h2>
+                <p className="text-slate-400 max-w-md mx-auto mb-8">
+                  Explore our 70+ AI tools and add the ones you want to your cart. No account required to browse.
                 </p>
-
-                {/* Items summary */}
-                <div className="mt-5 border-t border-purple-900/30 pt-4 space-y-2">
-                  {items.map(item => (
-                    <div key={item.key} className="flex items-center gap-2 text-xs">
-                      <span className="text-lg">{item.toolLogo}</span>
-                      <span className="text-slate-300 flex-1 truncate">{item.toolName} — {item.planName}</span>
-                      <span className="text-purple-300 font-semibold flex-shrink-0">{item.planPrice}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recommended */}
-              <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-900/30 text-center">
-                <p className="text-slate-400 text-xs mb-2">Looking for more tools?</p>
-                <Link href="/tools" className="text-purple-400 hover:text-purple-300 text-xs font-medium flex items-center justify-center gap-1 transition-colors">
-                  Browse all 70 AI Tools <ArrowRight className="w-3 h-3" />
+                <Link
+                  href="/tools"
+                  className="inline-flex items-center gap-2 btn-primary text-white font-bold px-8 py-3.5 rounded-xl shadow-glow-sm"
+                >
+                  Explore AI Tools <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
-            </div>
-          </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* ── Items column (2/3) ── */}
+                <div className="lg:col-span-2 space-y-3">
+                  {items.map(item => (
+                    <FullCartItemRow
+                      key={item.key}
+                      item={item}
+                      onRemove={handleRemove}
+                      onChangePlan={handleChangePlan}
+                    />
+                  ))}
+
+                  {/* Trust badges */}
+                  <div className="grid grid-cols-3 gap-3 mt-6">
+                    {[
+                      { icon: <Shield className="w-4 h-4" />, label: 'Secure Checkout' },
+                      { icon: <Zap className="w-4 h-4" />,    label: 'Instant Access' },
+                      { icon: <Check className="w-4 h-4" />,  label: 'Cancel Anytime' },
+                    ].map(b => (
+                      <div key={b.label} className="flex items-center gap-2 p-3 rounded-xl bg-purple-950/20 border border-purple-900/30 text-xs text-slate-400">
+                        <span className="text-purple-400">{b.icon}</span>
+                        {b.label}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── Order summary sidebar (1/3) ── */}
+                <div className="space-y-4">
+                  <div className="glow-border rounded-2xl p-6 bg-[#0F0A1E] sticky top-24">
+                    <h2 className="text-white font-bold text-lg mb-5">Order Summary</h2>
+
+                    <div className="space-y-3 text-sm mb-5">
+                      <div className="flex justify-between text-slate-400">
+                        <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
+                        <span className="text-white">₹{subtotal.toLocaleString('en-IN')}</span>
+                      </div>
+                      {couponApplied && (
+                        <div className="flex justify-between text-emerald-400">
+                          <span className="flex items-center gap-1">
+                            <Tag className="w-3.5 h-3.5" /> Discount (10%)
+                          </span>
+                          <span>−₹{discount.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-slate-400">
+                        <span className="flex items-center gap-1">
+                          GST (18%)
+                          <span title="Taxes calculated at checkout" className="cursor-help">
+                            <Info className="w-3 h-3 opacity-50" />
+                          </span>
+                        </span>
+                        <span className="text-white">₹{tax.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-white border-t border-purple-900/30 pt-3 mt-1 text-base">
+                        <span>Total</span>
+                        <span className="text-purple-300">₹{total.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    {/* Coupon */}
+                    {!couponApplied && (
+                      <div className="flex gap-2 mb-5">
+                        <input
+                          type="text"
+                          placeholder="Coupon code"
+                          value={coupon}
+                          onChange={e => setCoupon(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                          className="flex-1 bg-purple-950/40 border border-purple-800/40 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                        />
+                        <button
+                          onClick={applyCoupon}
+                          className="px-3 py-2 bg-purple-600/30 border border-purple-700/50 text-purple-300 text-sm rounded-lg hover:bg-purple-600/50 transition-colors font-medium"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    )}
+                    {couponApplied && (
+                      <div className="flex items-center gap-2 mb-5 p-2.5 rounded-lg bg-emerald-900/20 border border-emerald-700/30 text-emerald-400 text-xs">
+                        <Check className="w-4 h-4" />
+                        Coupon &ldquo;APKAAI10&rdquo; applied — 10% off!
+                      </div>
+                    )}
+
+                    {/* Checkout CTA */}
+                    <button
+                      className="w-full btn-primary text-white font-bold py-3.5 rounded-xl shadow-glow-sm flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                      onClick={handleCheckout}
+                      disabled={checkingOut}
+                    >
+                      {checkingOut ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        <>
+                          Proceed to Checkout
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-xs text-slate-500 mt-3">
+                      Payment gateway integration coming soon (Razorpay / Stripe).
+                    </p>
+
+                    {/* Items summary */}
+                    <div className="mt-5 border-t border-purple-900/30 pt-4 space-y-2">
+                      {items.map(item => (
+                        <div key={item.key} className="flex items-center gap-2 text-xs">
+                          <span className="text-lg">{item.toolLogo}</span>
+                          <span className="text-slate-300 flex-1 truncate">{item.toolName} — {item.planName}</span>
+                          <span className="text-purple-300 font-semibold flex-shrink-0">{item.planPrice}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommended */}
+                  <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-900/30 text-center">
+                    <p className="text-slate-400 text-xs mb-2">Looking for more tools?</p>
+                    <Link href="/tools" className="text-purple-400 hover:text-purple-300 text-xs font-medium flex items-center justify-center gap-1 transition-colors">
+                      Browse all 70 AI Tools <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
