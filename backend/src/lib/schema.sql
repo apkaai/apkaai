@@ -193,3 +193,26 @@ CREATE TABLE IF NOT EXISTS user_wishlist (
 
 CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON user_wishlist(user_id);
 CREATE INDEX IF NOT EXISTS idx_wishlist_tool_id ON user_wishlist(tool_id);
+
+-- ── tool_reviews ──────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tool_reviews (
+  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  tool_id     VARCHAR(50)  NOT NULL,
+  tool_slug   VARCHAR(100) NOT NULL,
+  user_id     UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  rating      INTEGER      NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  title       VARCHAR(200),
+  body        TEXT,
+  helpful     INTEGER      DEFAULT 0,
+  created_at  TIMESTAMPTZ  DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ  DEFAULT NOW(),
+  UNIQUE(tool_id, user_id)   -- one review per tool per user
+);
+
+CREATE INDEX IF NOT EXISTS idx_reviews_tool_id ON tool_reviews(tool_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_user_id ON tool_reviews(user_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_created ON tool_reviews(created_at DESC);
+
+CREATE OR REPLACE TRIGGER tool_reviews_updated_at
+  BEFORE UPDATE ON tool_reviews
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

@@ -4,6 +4,7 @@ import { Star, ExternalLink, Check, ArrowRight, Globe, Tag, Zap } from 'lucide-r
 import ToolCard from '@/components/ToolCard'
 import { getToolBySlug, getToolsByCategory, tools, categories } from '@/lib/tools-data'
 import { SidebarCartCTA, PlanCartButton } from './ToolDetailCartSection'
+import ReviewSection from '@/components/reviews/ReviewSection'
 
 interface Props { params: { slug: string } }
 
@@ -244,6 +245,11 @@ export default function ToolDetailPage({ params }: Props) {
               Compare with other tools
             </Link>
           </div>
+        </div>
+
+        {/* Reviews */}
+        <div className="mt-10">
+          <ReviewSection toolId={tool.id} toolSlug={tool.slug} />
         </div>
 
         {/* Related Tools */}
