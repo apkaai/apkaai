@@ -13,6 +13,7 @@ const adminRouter      = require('./routes/admin')
 const analyticsRouter  = require('./routes/analytics')
 const cloudRouter      = require('./routes/cloud')
 const ordersRouter     = require('./routes/orders')
+const paymentRouter    = require('./routes/payment')
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -20,6 +21,10 @@ const PORT = process.env.PORT || 4000
 // ── Security & Middleware ─────────────────────────────────────────────────────
 app.use(helmet())
 app.use(morgan('dev'))
+
+// Raw body for Razorpay webhook signature verification (must be before express.json)
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }))
+
 app.use(express.json())
 
 // CORS — allow Next.js frontend
@@ -54,6 +59,7 @@ app.use('/api/admin',      adminRouter)
 app.use('/api/analytics',  analyticsRouter)
 app.use('/api/cloud',      cloudRouter)
 app.use('/api/orders',     ordersRouter)
+app.use('/api/payment',    paymentRouter)
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {

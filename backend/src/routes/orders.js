@@ -56,7 +56,7 @@ router.post('/', requireAuth, async (req, res, next) => {
     const orderResult = await query(
       `INSERT INTO orders
          (user_id, status, subtotal, discount, tax, total, coupon_code, payment_method)
-       VALUES ($1, 'confirmed', $2, $3, $4, $5, $6, 'pending')
+       VALUES ($1, 'pending', $2, $3, $4, $5, $6, 'razorpay')
        RETURNING *`,
       [
         req.user.userId,

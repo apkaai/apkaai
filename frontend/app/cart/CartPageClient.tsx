@@ -4,14 +4,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   ShoppingCart, ArrowRight, Trash2, RotateCcw, ArrowLeft,
-  Tag, Shield, Zap, Check, Info, Loader2, PackageCheck
+  Tag, Shield, Zap, Check, Info, PackageCheck
 } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import PlanModal from '@/components/cart/PlanModal'
+import PaymentModal from '@/components/payment/PaymentModal'
 import type { CartItem } from '@/lib/cart-context'
 import { tools } from '@/lib/tools-data'
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
 
 function getToken() {
   if (typeof window === 'undefined') return null
@@ -111,11 +110,11 @@ export default function CartPageClient() {
     removeItem, clearCart,
   } = useCart()
   const { toasts, show: showToast } = useToast()
-  const [changingItem, setChangingItem] = useState<CartItem | null>(null)
-  const [coupon, setCoupon]             = useState('')
-  const [couponApplied, setCouponApplied] = useState(false)
-  const [checkingOut, setCheckingOut]   = useState(false)
-  const [orderPlaced, setOrderPlaced]   = useState<string | null>(null) // orderId after success
+  const [changingItem, setChangingItem]       = useState<CartItem | null>(null)
+  const [coupon, setCoupon]                   = useState('')
+  const [couponApplied, setCouponApplied]     = useState(false)
+  const [paymentOpen, setPaymentOpen]         = useState(false)
+  const [orderPlaced, setOrderPlaced]         = useState<string | null>(null)
 
   const tax      = Math.round(subtotal * 0.18)
   const discount = couponApplied ? Math.round(subtotal * 0.1) : 0
@@ -139,47 +138,20 @@ export default function CartPageClient() {
     }
   }
 
-  async function handleCheckout() {
+  function handleCheckout() {
     const token = getToken()
     if (!token) {
-      showToast('Please sign in to place an order', 'info')
+      showToast('Please sign in to checkout', 'info')
       router.push('/signin')
       return
     }
+    setPaymentOpen(true)
+  }
 
-    setCheckingOut(true)
-    try {
-      const res = await fetch(`${API}/orders`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          items,
-          subtotal,
-          discount,
-          tax,
-          total,
-          couponCode: couponApplied ? 'APKAAI10' : null,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        showToast(data.error || 'Failed to place order', 'info')
-        setCheckingOut(false)
-        return
-      }
-
-      // Success — clear cart and show confirmation
-      clearCart()
-      setOrderPlaced(data.orderId)
-    } catch {
-      showToast('Network error. Please try again.', 'info')
-      setCheckingOut(false)
-    }
+  function handlePaymentSuccess(orderId: string) {
+    setPaymentOpen(false)
+    clearCart()
+    setOrderPlaced(orderId)
   }
 
   return (
@@ -356,22 +328,12 @@ export default function CartPageClient() {
                     <button
                       className="w-full btn-primary text-white font-bold py-3.5 rounded-xl shadow-glow-sm flex items-center justify-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                       onClick={handleCheckout}
-                      disabled={checkingOut}
                     >
-                      {checkingOut ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Placing Order...
-                        </>
-                      ) : (
-                        <>
-                          Proceed to Checkout
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
+                      Proceed to Checkout
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                     <p className="text-center text-xs text-slate-500 mt-3">
-                      Payment gateway integration coming soon (Razorpay / Stripe).
+                      Secured by Razorpay · UPI, Cards, Net Banking accepted
                     </p>
 
                     {/* Items summary */}
@@ -431,6 +393,20 @@ export default function CartPageClient() {
           />
         )
       })()}
+
+      {/* Payment modal */}
+      {paymentOpen && (
+        <PaymentModal
+          items={items}
+          subtotal={subtotal}
+          discount={discount}
+          tax={tax}
+          total={total}
+          couponCode={couponApplied ? 'APKAAI10' : null}
+          onSuccess={handlePaymentSuccess}
+          onClose={() => setPaymentOpen(false)}
+        />
+      )}
     </div>
   )
 }
