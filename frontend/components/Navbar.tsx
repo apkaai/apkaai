@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag } from 'lucide-react'
+import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag, Heart } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import HoverPreview from '@/components/HoverPreview'
 import { useCart } from '@/lib/cart-context'
@@ -196,6 +196,10 @@ export default function Navbar() {
                     <Link href="/orders" onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-slate-300 hover:text-white hover:bg-purple-900/30 text-sm transition-colors">
                       <ShoppingBag className="w-4 h-4" /> Order History
+                    </Link>
+                    <Link href="/wishlist" onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-slate-300 hover:text-white hover:bg-purple-900/30 text-sm transition-colors">
+                      <Heart className="w-4 h-4" /> My Wishlist
                     </Link>
                     {user.role === 'admin' && (
                       <Link href="/admin" onClick={() => setProfileOpen(false)}

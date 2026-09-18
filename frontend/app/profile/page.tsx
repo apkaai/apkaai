@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Calendar, Shield, LogOut, ArrowRight, Zap, ShoppingBag } from 'lucide-react'
+import { User, Mail, Calendar, Shield, LogOut, ArrowRight, Zap, ShoppingBag, Heart } from 'lucide-react'
 
 interface UserData { userId: string; name: string; email: string; role: string; created_at?: string }
 
@@ -90,6 +90,11 @@ export default function ProfilePage() {
             <ShoppingBag className="w-6 h-6 text-purple-400 mb-2" />
             <p className="text-white font-semibold text-sm">Order History</p>
             <p className="text-slate-400 text-xs mt-0.5">View all your past orders and subscriptions</p>
+          </Link>
+          <Link href="/wishlist" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group col-span-2">
+            <Heart className="w-6 h-6 text-red-400 mb-2" />
+            <p className="text-white font-semibold text-sm">My Wishlist</p>
+            <p className="text-slate-400 text-xs mt-0.5">AI tools you&apos;ve saved for later</p>
           </Link>
           {user.role === 'admin' && (
             <Link href="/admin" className="glow-border rounded-xl p-5 bg-purple-900/20 border-purple-600/40 hover:bg-purple-900/30 transition-all col-span-2">

@@ -174,3 +174,22 @@ CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE OR REPLACE TRIGGER orders_updated_at
   BEFORE UPDATE ON orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── user_wishlist ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS user_wishlist (
+  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  tool_id       VARCHAR(50)  NOT NULL,
+  tool_slug     VARCHAR(100) NOT NULL,
+  tool_name     VARCHAR(200) NOT NULL,
+  tool_logo     VARCHAR(10),
+  tool_category VARCHAR(200),
+  tool_pricing  VARCHAR(50),
+  tool_rating   NUMERIC(3,1) DEFAULT 0,
+  tool_tagline  VARCHAR(300),
+  created_at    TIMESTAMPTZ  DEFAULT NOW(),
+  UNIQUE(user_id, tool_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_wishlist_user_id ON user_wishlist(user_id);
+CREATE INDEX IF NOT EXISTS idx_wishlist_tool_id ON user_wishlist(tool_id);
