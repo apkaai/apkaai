@@ -228,6 +228,34 @@ router.post('/register', async (req, res, next) => {
     )
     const user  = result.rows[0]
     const token = createToken(user.user_id, user.email)
+
+    // Track referral if a ref code was passed
+    if (req.body.referralCode) {
+      try {
+        const refCode = String(req.body.referralCode).toUpperCase().trim()
+        const referrerResult = await query(
+          'SELECT user_id FROM users WHERE referral_code = $1',
+          [refCode]
+        )
+        if (referrerResult.rowCount > 0 && referrerResult.rows[0].user_id !== user.user_id) {
+          const referrerId = referrerResult.rows[0].user_id
+          await query(
+            `INSERT INTO referrals (referrer_id, referred_id, code, status, converted_at)
+             VALUES ($1, $2, $3, 'signed_up', NOW())
+             ON CONFLICT DO NOTHING`,
+            [referrerId, user.user_id, refCode]
+          )
+          await query(
+            'UPDATE users SET referred_by = $1 WHERE user_id = $2',
+            [referrerId, user.user_id]
+          )
+        }
+      } catch (refErr) {
+        // Non-fatal — log but don't fail registration
+        console.warn('[Auth] Referral tracking error:', refErr.message)
+      }
+    }
+
     res.status(201).json({
       success: true,
       token,

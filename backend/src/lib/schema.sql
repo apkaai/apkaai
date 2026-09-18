@@ -216,3 +216,23 @@ CREATE INDEX IF NOT EXISTS idx_reviews_created ON tool_reviews(created_at DESC);
 CREATE OR REPLACE TRIGGER tool_reviews_updated_at
   BEFORE UPDATE ON tool_reviews
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ── referrals ─────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS referrals (
+  id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  referrer_id     UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  referred_id     UUID         REFERENCES users(user_id) ON DELETE SET NULL,
+  code            VARCHAR(20)  UNIQUE NOT NULL,
+  status          VARCHAR(20)  NOT NULL DEFAULT 'pending'
+                               CHECK (status IN ('pending','signed_up','rewarded')),
+  reward_applied  BOOLEAN      DEFAULT FALSE,
+  created_at      TIMESTAMPTZ  DEFAULT NOW(),
+  converted_at    TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_code     ON referrals(code);
+
+-- Store referral code on user for easy lookup
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by   UUID REFERENCES users(user_id) ON DELETE SET NULL;

@@ -16,6 +16,7 @@ const ordersRouter     = require('./routes/orders')
 const paymentRouter    = require('./routes/payment')
 const wishlistRouter   = require('./routes/wishlist')
 const reviewsRouter    = require('./routes/reviews')
+const referralRouter   = require('./routes/referral')
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -64,6 +65,7 @@ app.use('/api/orders',     ordersRouter)
 app.use('/api/payment',    paymentRouter)
 app.use('/api/wishlist',   wishlistRouter)
 app.use('/api/reviews',    reviewsRouter)
+app.use('/api/referral',   referralRouter)
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
