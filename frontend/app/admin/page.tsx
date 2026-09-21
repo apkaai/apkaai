@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
-  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight
+  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight, Activity
 } from 'lucide-react'
 
 interface User   { user_id: string; name: string; email: string; role: string; created_at: string }
@@ -97,10 +97,11 @@ export default function AdminDashboard() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview',  icon: BarChart3 },
-    { id: 'users',    label: 'Users',     icon: Users },
-    { id: 'contacts', label: 'Contacts',  icon: Mail },
-    { id: 'datalake', label: 'Data Lake', icon: Database },
+    { id: 'overview',    label: 'Overview',    icon: BarChart3  },
+    { id: 'users',       label: 'Users',       icon: Users      },
+    { id: 'contacts',    label: 'Contacts',    icon: Mail       },
+    { id: 'datalake',    label: 'Data Lake',   icon: Database   },
+    { id: 'monitoring',  label: 'Monitoring',  icon: Activity, href: '/admin/monitoring' },
   ] as const
 
   return (
@@ -126,18 +127,30 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           {/* Tab nav */}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
-            {tabs.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex-shrink-0 ${
-                  tab === t.id ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-600'
-                }`}>
-                <t.icon className="w-4 h-4" />
-                {t.label}
-                {t.id === 'users' && users.length > 0 && (
-                  <span className="bg-white/20 text-white text-xs px-1.5 py-0.5 rounded-full">{users.length}</span>
-                )}
-              </button>
-            ))}
+            {tabs.map(t => {
+              // Monitoring links to its own page
+              if ('href' in t && t.href) {
+                return (
+                  <Link key={t.id} href={t.href}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex-shrink-0 bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-600">
+                    <t.icon className="w-4 h-4" />
+                    {t.label}
+                  </Link>
+                )
+              }
+              return (
+                <button key={t.id} onClick={() => setTab(t.id as 'overview'|'users'|'contacts'|'datalake')}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex-shrink-0 ${
+                    tab === t.id ? 'bg-purple-600 border-purple-500 text-white' : 'bg-[#0F0A1E] border-purple-800/40 text-slate-300 hover:border-purple-600'
+                  }`}>
+                  <t.icon className="w-4 h-4" />
+                  {t.label}
+                  {t.id === 'users' && users.length > 0 && (
+                    <span className="bg-white/20 text-white text-xs px-1.5 py-0.5 rounded-full">{users.length}</span>
+                  )}
+                </button>
+              )
+            })}
           </div>
 
           {/* ── OVERVIEW ─────────────────────────────────────────────────── */}
