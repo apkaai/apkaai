@@ -311,11 +311,11 @@ DB_HOST=apkaai-db.cl8qcg44s0p7.ap-south-1.rds.amazonaws.com
 DB_PORT=5432
 DB_NAME=apkaai
 DB_USER=apkaai_admin
-DB_PASS=<password>
+DB_PASS=<see .env on EC2>
 DB_SSL=true
 
 # Auth
-JWT_SECRET=<secret>
+JWT_SECRET=<see .env on EC2>
 PASSWORD_SALT=apkaai2026secure
 
 # SMTP (email)
@@ -323,13 +323,13 @@ SMTP_HOST=<host>
 SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=<user>
-SMTP_PASS=<password>
+SMTP_PASS=<see .env on EC2>
 SMTP_FROM=noreply@apkaai.com
 
 # AWS
 AWS_REGION=ap-south-1
-AWS_ACCESS_KEY_ID=<key>
-AWS_SECRET_ACCESS_KEY=<secret>
+AWS_ACCESS_KEY_ID=<see .env on EC2>
+AWS_SECRET_ACCESS_KEY=<see .env on EC2>
 ```
 
 ### Frontend
@@ -513,7 +513,7 @@ Push to apkaai-non-prod repo
 ```
 
 ### GitHub Token
-New token (Sep 2026): `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`
+Generate a new token at GitHub → Settings → Developer settings → Personal access tokens when needed.
 
 ---
 
