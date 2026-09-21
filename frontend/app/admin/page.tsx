@@ -178,6 +178,7 @@ export default function AdminDashboard() {
   const [search, setSearch]   = useState('')
   const [driveFiles, setDriveFiles] = useState<{ name: string; type: string; modified: string; size: string; link: string }[]>([])
   const [driveLoading, setDriveLoading] = useState(false)
+  const [newsletterCount, setNewsletterCount] = useState(0)
 
   const token = typeof window !== 'undefined' ? (localStorage.getItem('apkaai_token') || sessionStorage.getItem('apkaai_token') || '') : ''
   const API   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
@@ -188,6 +189,12 @@ export default function AdminDashboard() {
       const r = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } })
       const d = await r.json()
       setUsers(d.users || [])
+    } catch {}
+    // Also fetch newsletter subscriber count
+    try {
+      const r = await fetch('/api/newsletter/subscribers', { headers: { Authorization: `Bearer ${token}` } })
+      const d = await r.json()
+      setNewsletterCount(d.active || 0)
     } catch {}
     setLoading(false)
   }
@@ -302,7 +309,7 @@ export default function AdminDashboard() {
                   { label: 'Total Users',    value: users.length,                      icon: Users,       color: 'text-purple-400' },
                   { label: 'Contacts Recv.', value: contacts.length,                   icon: Mail,        color: 'text-blue-400' },
                   { label: 'Total Orders',   value: orderStats ? parseInt(orderStats.total_orders) : orders.length, icon: ShoppingBag, color: 'text-emerald-400' },
-                  { label: 'Revenue (₹)',    value: orderStats ? `₹${Number(orderStats.total_revenue).toLocaleString('en-IN')}` : '—', icon: IndianRupee, color: 'text-amber-400' },
+                  { label: 'Newsletter Subs', value: newsletterCount,                  icon: IndianRupee, color: 'text-amber-400' },
                 ].map(s => (
                   <div key={s.label} className="glow-border rounded-xl p-5 bg-[#0F0A1E]">
                     <s.icon className={`w-5 h-5 ${s.color} mb-2`} />

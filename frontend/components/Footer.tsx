@@ -2,18 +2,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Twitter, Linkedin, Github, Mail, MapPin, BarChart3 } from 'lucide-react'
 import HoverPreview from '@/components/HoverPreview'
+import NewsletterBar from '@/components/NewsletterBar'
 
 const MAPS_URL = 'https://maps.google.com/?q=Ace+City,+Greater+Noida,+Uttar+Pradesh,+India'
 const EMAIL    = 'ashutoshkumarpandey@apkaai.com'
 
 const footerLinks = {
   'AI Tools': [
-    { label: 'All 70 Tools',       href: '/tools' },
-    { label: 'AI Chat & Research',  href: '/category/ai-chat' },
-    { label: 'Image Generation',    href: '/category/image-generation' },
-    { label: 'Coding Tools',        href: '/category/coding' },
-    { label: 'Video Generation',    href: '/category/video-generation' },
-    { label: 'Writing & Content',   href: '/category/writing' },
+    { label: 'All 100+ Tools',     href: '/tools' },
+    { label: 'AI Chat & Research', href: '/category/ai-chat' },
+    { label: 'Image Generation',   href: '/category/image-generation' },
+    { label: 'Coding Tools',       href: '/category/coding' },
+    { label: 'Video Generation',   href: '/category/video-generation' },
+    { label: 'Writing & Content',  href: '/category/writing' },
   ],
   'Company': [
     { label: 'About Us',   href: '/about' },
@@ -123,6 +124,11 @@ export default function Footer() {
               <Twitter className="w-4 h-4" />
               Follow on Twitter / X
             </a>
+
+            {/* Newsletter subscribe */}
+            <div className="mt-6">
+              <NewsletterBar />
+            </div>
           </div>
 
           {/* Link columns */}

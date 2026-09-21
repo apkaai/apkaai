@@ -236,3 +236,17 @@ CREATE INDEX IF NOT EXISTS idx_referrals_code     ON referrals(code);
 -- Store referral code on user for easy lookup
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code VARCHAR(20) UNIQUE;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by   UUID REFERENCES users(user_id) ON DELETE SET NULL;
+
+-- ── newsletter_subscribers ────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id           UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  email        VARCHAR(200) UNIQUE NOT NULL,
+  name         VARCHAR(200),
+  source       VARCHAR(50)  DEFAULT 'website',
+  status       VARCHAR(20)  DEFAULT 'active' CHECK (status IN ('active','unsubscribed')),
+  created_at   TIMESTAMPTZ  DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_newsletter_email  ON newsletter_subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
