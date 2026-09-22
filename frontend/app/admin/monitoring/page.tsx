@@ -496,7 +496,7 @@ export default function MonitoringPage() {
               </button>
             </div>
           ) : (
-            <div className="relative" style={{ height: '700px' }}>
+            <div className="relative" style={{ height: '850px' }}>
               {/* Loading shimmer */}
               {grafanaOk === null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-[#0F0A1E] z-10">
@@ -508,14 +508,13 @@ export default function MonitoringPage() {
               )}
 
               {/*
-                Grafana iframe — embedded via /grafana Nginx proxy.
-                kiosk=tv removes header/nav for clean embed.
-                org parameter ensures correct org context.
-                The dashboard uses CloudWatch datasource with EC2 IAM role.
-                No Grafana credentials are exposed in this URL.
+                Grafana iframe — embedded via /grafana Nginx proxy (anonymous viewer).
+                Removed kiosk=tv — it interferes with panel data loading in Grafana 10
+                when serve_from_sub_path=true. Using viewPanel=false instead.
+                Anonymous access enabled so no login required inside iframe.
               */}
               <iframe
-                src="/grafana/d/apkaai-aws-monitoring/apkaai-aws-monitoring?orgId=1&refresh=30s&kiosk=tv&theme=dark"
+                src={`/grafana/d/apkaai-aws-monitoring/apkaai-aws-monitoring?orgId=1&refresh=30s&theme=dark&from=now-3h&to=now`}
                 className="w-full h-full border-0"
                 title="ApkaAI AWS Monitoring — Grafana"
                 loading="lazy"
