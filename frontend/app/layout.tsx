@@ -5,7 +5,6 @@ import Footer from '@/components/Footer'
 import FloatingSocialWidget from '@/components/FloatingSocialWidget'
 import AIChatbot from '@/components/AIChatbot'
 import StarryBackground from '@/components/StarryBackground'
-import ComingSoonWatermark from '@/components/ComingSoonWatermark'
 import GaneshaFloat from '@/components/GaneshaFloat'
 import { CartProvider } from '@/lib/cart-context'
 import { WishlistProvider } from '@/lib/wishlist-context'
@@ -45,7 +44,6 @@ export default function RootLayout({
         <CartProvider>
           <WishlistProvider>
           <StarryBackground />
-          <ComingSoonWatermark />
           <Navbar />
           <CartDrawer />
           <main>{children}</main>

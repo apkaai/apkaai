@@ -222,11 +222,11 @@ export const tools: AITool[] = [
     tagline: 'Agentic coding by Anthropic in terminal',
     description: "Claude Code is Anthropic's terminal-based agentic coding tool. It reads your entire codebase, writes, tests, and commits code autonomously with deep context understanding.",
     category: 'Coding', categorySlug: 'coding', logo: '🖥️',
-    website: 'https://docs.anthropic.com/claude-code', pricing: 'Paid', startingPrice: 'Usage-based', monthlyPrice: 1650,
+    website: 'https://docs.anthropic.com/claude-code', pricing: 'Paid', startingPrice: '₹250/MTok', monthlyPrice: 1650,
     rating: 4.7, reviews: 21000, tags: ['Terminal', 'Agentic', 'Anthropic', 'Git', 'Full-codebase'],
     featured: false, new: true,
     pricingPlans: [
-      { name: 'API Usage', price: '$3/MTok input', monthly: 1650, features: ['Claude 3.5 Sonnet', 'Full codebase context', 'Git integration', 'Multi-file edits'], popular: true },
+      { name: 'API Usage', price: '₹250/MTok input', monthly: 1650, features: ['Claude 3.5 Sonnet', 'Full codebase context', 'Git integration', 'Multi-file edits'], popular: true },
     ]
   },
   {

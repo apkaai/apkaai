@@ -1,20 +1,38 @@
 # ApkaAI — Project Documentation
 
-India's #1 AI Products Marketplace — Discover, compare and access the best AI tools.
+> **Last updated:** September 2026
+> **Live URL:** https://apkaai.com
+> **Repository:** https://github.com/apkaai/apkaai (branch: `main`)
+> **Non-Prod Repo:** https://github.com/apkaai/apkaai-non-prod (branch: `main`)
 
 ---
 
-## 🌐 Live URLs
+## Table of Contents
 
-| Environment | URL | Status |
-|-------------|-----|--------|
-| HTTP (live now) | http://3.6.107.51 | ✅ Live |
-| Production | https://apkaai.com | ⏳ DNS pending |
-| API Health | http://3.6.107.51/health | ✅ Live |
+1. [Project Overview](#1-project-overview)
+2. [Tech Stack](#2-tech-stack)
+3. [Repository Structure](#3-repository-structure)
+4. [Frontend Architecture](#4-frontend-architecture)
+5. [Backend Architecture](#5-backend-architecture)
+6. [Database](#6-database)
+7. [Infrastructure & Deployment](#7-infrastructure--deployment)
+8. [Environment Variables](#8-environment-variables)
+9. [Pages & Routes](#9-pages--routes)
+10. [Key Features](#10-key-features)
+11. [Data Models](#11-data-models)
+12. [Git Workflow](#12-git-workflow)
+13. [Admin Access](#13-admin-access)
+14. [Social Links](#14-social-links)
+15. [Pricing & Tool Data](#15-pricing--tool-data)
+16. [Cloud Intelligence Platform](#16-cloud-intelligence-platform)
+17. [Cart System](#17-cart-system)
+18. [Authentication](#18-authentication)
+19. [Email / SMTP](#19-email--smtp)
+20. [Known Limitations](#20-known-limitations)
 
 ---
 
-## 🏗️ Architecture
+## 1. Project Overview
 
 ```
                     apkaai.com (GoDaddy DNS)
@@ -39,7 +57,7 @@ India's #1 AI Products Marketplace — Discover, compare and access the best AI 
 
 ---
 
-## 🛠️ Tech Stack
+## 2. Tech Stack
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
@@ -192,9 +210,10 @@ apkaai/
 
 ---
 
-## 🔌 API Endpoints
+## 4. Frontend Architecture
 
-Base URL: `http://3.6.107.51/api` (will be `https://apkaai.com/api` after DNS)
+### Framework
+Next.js 14 with App Router. All pages use the `app/` directory. Client components are explicitly marked `'use client'`.
 
 ### Auth
 
@@ -318,10 +337,9 @@ Base URL: `http://3.6.107.51/api` (will be `https://apkaai.com/api` after DNS)
 
 ---
 
-## 🔐 Environment Variables
+## 8. Environment Variables
 
-### Backend (`backend/.env`)
-
+### Backend (`/home/ec2-user/apkaai/backend/.env`)
 ```env
 # Server
 PORT=4000
@@ -351,10 +369,151 @@ SMTP_PASS=your_app_password_here
 SMTP_FROM=ApkaAI <your_email@gmail.com>
 ```
 
-### Frontend (`frontend/.env.production`)
+---
 
-```env
-NEXT_PUBLIC_API_URL=https://apkaai.com/api
+## 9. Pages & Routes
+
+| URL | Description |
+|---|---|
+| `/` | Homepage — hero, stats, featured tools, features |
+| `/tools` | All 70+ AI tools with search, filters, sort |
+| `/tools/[slug]` | Individual AI tool detail page |
+| `/category/[slug]` | Tools by category |
+| `/compare` | Side-by-side AI tool comparison (up to 4) |
+| `/pricing` | AI tools pricing guide (INR) |
+| `/cart` | Shopping cart |
+| `/blog` | Blog |
+| `/about` | About page |
+| `/contact` | Contact form |
+| `/careers` | Careers |
+| `/help` | Help centre |
+| `/privacy` | Privacy policy |
+| `/cookies` | Cookie policy |
+| `/signin` | User login |
+| `/profile` | User profile (authenticated) |
+| `/forgot-password` | Forgot password form |
+| `/reset-password` | Reset password (token from email) |
+| `/admin` | Admin panel (admin role required) |
+| `/admin/login` | Admin login |
+| `/cloud` | Cloud Intelligence Platform home |
+| `/cloud/calculator` | Cloud pricing calculator |
+| `/cloud/compare` | Cloud provider comparison |
+| `/cloud/bill` | Cloud bill builder |
+| `/cloud/saved` | Saved cloud estimates |
+| `/cloud/backup` | Backup & Data Protection vendors |
+| `/deals/[slug]` | Tool deals/discounts page |
+
+---
+
+## 10. Key Features
+
+### AI Tool Marketplace
+- 70+ AI tools across 16 categories
+- Search, filter by pricing/category, sort
+- Tool detail pages with pricing plans
+- Comparison tool (up to 4 tools side by side)
+- Pricing guide with INR pricing
+
+### Cart System
+- Add to Cart on every tool card, detail page, pricing page, comparison page
+- Plan selection modal (monthly/yearly billing toggle)
+- Cart drawer (mini-cart, slide-in from right)
+- Full `/cart` page with order summary, GST (18%), coupon support
+- Persistent via `localStorage` (key: `apkaai_cart`)
+- Test coupon: `APKAAI10` (10% off)
+
+### Cloud Intelligence Platform
+- **5 cloud providers:** AWS, Azure (Microsoft), GCP (Google), ACE Cloud, Utho 🇮🇳
+- **Pricing calculator** — real on-demand pricing, region-aware
+- **Cloud comparison** — side-by-side across all 5 providers
+- **Bill builder** — multi-service bill with GST, PDF export
+- **Saved estimates** — persist across sessions
+- **Backup vendors** — Commvault, Cohesity, Acronis, Veeam, Dhruva, Veritas/OpenText, Rubrik
+
+### Authentication
+- User registration + login
+- JWT-style HMAC token stored in `localStorage`
+- Forgot password → email with reset link (30 min expiry, single-use)
+- Admin login at `/admin/login`
+
+### AI Chatbot
+- Floating bottom-right chatbot
+- Bouncing animation when idle
+
+### Social Media
+- YouTube: https://www.youtube.com/@apkAI2026
+- Instagram: https://www.instagram.com/apkaai2k26/
+- Facebook: https://www.facebook.com/share/18pUPqwgCz/
+
+---
+
+## 11. Data Models
+
+### AITool (frontend/lib/tools-data.ts)
+```typescript
+interface AITool {
+  id: string             // Unique string ID ('1', '2', ...)
+  name: string           // Display name
+  slug: string           // URL slug (e.g. 'chatgpt')
+  tagline: string
+  description: string
+  category: string       // Display category name
+  categorySlug: string   // URL-safe category slug
+  logo: string           // Emoji
+  website: string        // Official URL
+  pricing: 'Free' | 'Freemium' | 'Paid' | 'Free Trial'
+  startingPrice: string  // Display string (e.g. '₹1,650/mo')
+  monthlyPrice?: number  // INR integer for comparison
+  rating: number
+  reviews: number
+  tags: string[]
+  featured: boolean
+  new: boolean
+  badge?: string
+  pricingPlans?: PricingPlan[]
+}
+
+interface PricingPlan {
+  name: string           // e.g. 'Free', 'Plus', 'Pro'
+  price: string          // Display string (e.g. '₹1,650/mo')
+  monthly: number        // INR integer
+  features: string[]
+  popular?: boolean
+}
+```
+
+### CartItem (frontend/lib/cart-context.tsx)
+```typescript
+interface CartItem {
+  key: string            // Unique: toolId__planName__billingCycle
+  toolId: string
+  toolName: string
+  toolSlug: string
+  toolLogo: string
+  toolWebsite: string
+  toolCategory: string
+  planName: string
+  planPrice: string      // Display string
+  planMonthly: number    // INR for calculation
+  billingCycle: 'monthly' | 'yearly'
+  quantity: number
+  addedAt: number        // Date.now()
+}
+```
+
+### User (PostgreSQL)
+```typescript
+interface User {
+  user_id: string        // UUID
+  email: string
+  name: string
+  password: string       // SHA-256 hash
+  role: 'user' | 'admin'
+  reset_token?: string
+  reset_token_expires?: Date
+  created_at: Date
+  updated_at: Date
+}
 ```
 
 ---
@@ -413,18 +572,23 @@ node backend/src/lib/migrate.js
 | 5 | PDF invoice download per order | 🔜 Planned |
 | 6 | User order cancellation (within 24h) | 🔜 Planned |
 
-### How to complete DNS (2 minutes):
-1. Go to https://dcc.godaddy.com/control/portfolio/apkaai.com/settings
-2. Click **DNS** tab
-3. Edit `A` record `@` → set value to `3.6.107.51`, TTL `600`
-4. Add `A` record `www` → `3.6.107.51`, TTL `600`
-5. Save — propagates in 30-60 min
+### Repositories
+| Repo | URL | Purpose |
+|---|---|---|
+| `apkaai/apkaai` | github.com/apkaai/apkaai | Production |
+| `apkaai/apkaai-non-prod` | github.com/apkaai/apkaai-non-prod | Non-production |
 
-### How to install SSL (after DNS propagates):
-```bash
-ssh -i deploy/apkaai-key.pem ec2-user@3.6.107.51
-sudo certbot --nginx -d apkaai.com -d www.apkaai.com \
-  --email admin@apkaai.com --agree-tos --non-interactive
+### Workflow
+```
+Feature development (Navkirat branch)
+    ↓
+Test in non-prod environment (port 3001 / 8080)
+    ↓
+Push Navkirat → origin/Navkirat
+    ↓
+Merge/push Navkirat → main (production)
+    ↓
+Push to apkaai-non-prod repo
 ```
 
 ---
@@ -443,7 +607,7 @@ sudo certbot --nginx -d apkaai.com -d www.apkaai.com \
 
 ---
 
-## 📅 Timeline
+## 13. Admin Access
 
 | Date | Milestone |
 |------|-----------|
@@ -458,4 +622,124 @@ sudo certbot --nginx -d apkaai.com -d www.apkaai.com \
 
 ---
 
-*Built with ❤️ in India 🇮🇳 — apkaai.com*
+## 14. Social Links
+
+| Platform | URL |
+|---|---|
+| YouTube | https://www.youtube.com/@apkAI2026 |
+| Instagram | https://www.instagram.com/apkaai2k26/ |
+| Facebook | https://www.facebook.com/share/18pUPqwgCz/ |
+
+---
+
+## 15. Pricing & Tool Data
+
+All tool and pricing data lives in **`frontend/lib/tools-data.ts`** — this is the single source of truth.
+
+### Categories (16)
+AI Chat & Research, Writing & Content, Image Generation, Video Generation, Music & Audio, Coding, Presentations, Research & Productivity, Design, Voice & Avatars, Automation, Business & Marketing, Meetings & Transcription, Learning, AI Search, **Backup & Data Protection** (new)
+
+### Tool Count
+- 60 main tools (IDs 1–60)
+- 7 backup vendors (IDs 61–67)
+- 10 free trial tools (IDs ft1–ft10)
+- **Total displayed:** 70+ (display count = 70)
+
+> **Note:** `id: '43'` in tools-data.ts is Figma AI — an internal array ID, not the display count. Do not change it.
+
+---
+
+## 16. Cloud Intelligence Platform
+
+### Providers (`frontend/lib/cloud-pricing.ts`)
+| Provider | ID | Region | Color |
+|---|---|---|---|
+| AWS | `aws` | ap-south-1 (Mumbai) | Orange `#FF9900` |
+| Microsoft Azure | `azure` | Central India | Blue `#0078D4` |
+| Google Cloud | `gcp` | asia-south1 (Mumbai) | Blue `#4285F4` |
+| ACE Cloud | `ace` | India Primary | Teal `#00C4B4` |
+| Utho 🇮🇳 | `utho` | Mumbai / Noida / Bangalore / Indore | Orange `#F97316` |
+
+### Pricing Verification
+All prices verified from official sources, September 2026:
+- AWS: `aws.amazon.com/ec2/pricing/on-demand/` + DoiT verification
+- Azure: `azure.microsoft.com/en-in/pricing/details/virtual-machines/linux/` + azurespeed.com
+- GCP: `cloud.google.com/products/compute/pricing` + gcloud-compute.com
+- Utho: `utho.com/pricing` + getdeploying.com (Sep 18, 2026)
+
+### Backup Vendors (`/cloud/backup`)
+Commvault, Cohesity, Acronis, Veeam, Dhruva (India), Veritas/OpenText, Rubrik
+
+---
+
+## 17. Cart System
+
+### How it works
+1. User clicks **Add to Cart** on any tool
+2. If multi-plan tool → `PlanModal` opens for plan selection
+3. Item added to `CartContext` → `CartDrawer` opens
+4. Items persist in `localStorage` (key: `apkaai_cart`)
+5. Cart icon in Navbar shows live badge count
+6. `/cart` page shows full order summary with GST + coupon
+
+### Cart Item Key Format
+`{toolId}__{planName}__{billingCycle}`
+
+### Yearly Pricing
+Yearly = monthly × 10 (2 months free heuristic). Override with actual data when available.
+
+### Checkout
+Checkout button is present but shows "coming soon" — ready for Razorpay/Stripe integration.
+
+### Test Coupon
+`APKAAI10` → 10% discount
+
+---
+
+## 18. Authentication
+
+### User Auth Flow
+1. Register at `/signin` → POST `/api/auth/register`
+2. Login → POST `/api/auth/login` → HMAC token stored in `localStorage`
+3. Protected pages check `localStorage.getItem('apkaai_user')`
+4. Token format: `base64url(payload).hmacSig`
+
+### Password Reset Flow
+1. User enters email at `/forgot-password`
+2. POST `/api/auth/forgot-password` → generates 32-byte random token
+3. SHA-256 hash stored in DB with 30-min expiry
+4. Email sent with link: `https://apkaai.com/reset-password?token=<rawToken>`
+5. User clicks link → page at `/reset-password` validates token via GET `/api/auth/verify-reset-token`
+6. User submits new password → POST `/api/auth/reset-password`
+7. Token nulled in DB (single-use)
+
+### Admin Auth
+Same flow but with `role: 'admin'` check after login.
+
+---
+
+## 19. Email / SMTP
+
+The backend uses Nodemailer. SMTP config is in the backend `.env`.
+
+- **Known working:** `ashutoshkumarpandey@apkaai.com` (receives emails)
+- Password reset emails are sent asynchronously (non-blocking)
+- SMTP not configured → emails silently skipped (logged as warning)
+- From address: configured via `SMTP_FROM` env var
+
+---
+
+## 20. Known Limitations
+
+| Area | Limitation |
+|---|---|
+| **Passwords** | SHA-256 + static salt — should migrate to bcrypt/argon2 |
+| **Cart checkout** | Not implemented — Razorpay/Stripe integration pending |
+| **Cloud prices** | Static data — update manually every quarter |
+| **Utho serverless/LB** | Pricing not publicly listed — shows "unavailable" |
+| **ACE Cloud prices** | Approximate — verify at acecloud.ai/pricing |
+| **Currency rates** | Hardcoded INR=84, EUR=0.92, GBP=0.79 — update periodically |
+| **Tool count** | Display shows 70 — actual tool entries are 77 (includes backup vendors) |
+| **Non-prod env** | Runs on port 3001/4001/8080 on same EC2 instance |
+| **DynamoDB** | Legacy dynamo.js still in codebase — not actively used for auth |
+| **GaneshaFloat** | Festival-specific component — may want to toggle off post-event |
