@@ -1,8 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check, Gift } from 'lucide-react'
 
 const AI_INTERESTS = [
   { value: '',               label: 'Select your AI interest...',    emoji: '' },
@@ -24,12 +25,34 @@ const AI_INTERESTS = [
 ]
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-slate-400">Loading...</div></div>}>
+      <SignUpForm />
+    </Suspense>
+  )
+}
+
+function SignUpForm() {
+  const searchParams = useSearchParams()
+  const refCode = searchParams.get('ref') || searchParams.get('referralCode') || ''
+
   const [form, setForm]       = useState({ name: '', email: '', password: '', confirm: '', interest: '' })
   const [show, setShow]       = useState(false)
   const [showC, setShowC]     = useState(false)
   const [status, setStatus]   = useState<'idle'|'loading'|'success'|'error'>('idle')
   const [message, setMessage] = useState('')
   const [errors, setErrors]   = useState<Record<string, string>>({})
+  const [referrerName, setReferrerName] = useState('')
+
+  // Validate referral code and get referrer's first name
+  useEffect(() => {
+    if (!refCode) return
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
+    fetch(`${API}/referral/validate/${refCode}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.valid && d?.referrerName) setReferrerName(d.referrerName) })
+      .catch(() => {})
+  }, [refCode])
 
   const validate = () => {
     const e: Record<string, string> = {}
@@ -52,10 +75,11 @@ export default function SignUpPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:     form.name.trim(),
-          email:    form.email.trim().toLowerCase(),
-          password: form.password,
-          interest: form.interest,
+          name:         form.name.trim(),
+          email:        form.email.trim().toLowerCase(),
+          password:     form.password,
+          interest:     form.interest,
+          referralCode: refCode || undefined,
         }),
       })
       const data = await res.json()
@@ -104,6 +128,22 @@ export default function SignUpPage() {
           <h1 className="text-3xl font-extrabold text-white mb-2">Create your account</h1>
           <p className="text-slate-400">Join thousands discovering the best AI tools</p>
         </div>
+
+        {/* Referral banner */}
+        {refCode && referrerName && (
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-amber-900/20 border border-amber-700/40 text-amber-300 text-sm mb-4">
+            <Gift className="w-5 h-5 flex-shrink-0" />
+            <span>
+              <strong>{referrerName}</strong> invited you! Sign up and use coupon <span className="font-mono font-bold">APKAAI10</span> for 10% off your first order.
+            </span>
+          </div>
+        )}
+        {refCode && !referrerName && (
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-purple-900/20 border border-purple-700/40 text-purple-300 text-sm mb-4">
+            <Gift className="w-5 h-5 flex-shrink-0" />
+            <span>You&apos;ve been referred! Sign up to get started.</span>
+          </div>
+        )}
 
         <div className="glow-border rounded-2xl p-8 bg-[#0F0A1E]">
           {status === 'success' ? (

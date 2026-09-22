@@ -67,20 +67,21 @@ export default function DashboardPage() {
     setError('')
     try {
       const token = getToken()
-      // Fetch orders, wishlist, reviews, referrals in parallel
-      const [ordersRes, wishlistRes, reviewsRes, referralRes] = await Promise.all([
-        fetch(`${API}/orders/my?page=1&limit=5`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API}/wishlist/ids`,              { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API}/referral/me`,               { headers: { Authorization: `Bearer ${token}` } }),
-        // reviews count — use orders endpoint which has all we need
-        fetch(`${API}/orders/my?page=1&limit=1`,  { headers: { Authorization: `Bearer ${token}` } }),
+
+      // Fetch all data in parallel
+      const [ordersRes, wishlistRes, referralRes, reviewsRes] = await Promise.all([
+        fetch(`${API}/orders/my?page=1&limit=5`,   { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/wishlist/ids`,                { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/referral/me`,                 { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/reviews/mine/count`,          { headers: { Authorization: `Bearer ${token}` } }),
       ])
 
       if (ordersRes.status === 401) { router.replace('/signin'); return }
 
       const ordersData   = await ordersRes.json()
-      const wishlistData = await wishlistRes.json()
-      const referralData = referralRes.ok ? await referralRes.json() : { stats: null }
+      const wishlistData = wishlistRes.ok  ? await wishlistRes.json()  : { ids: [] }
+      const referralData = referralRes.ok  ? await referralRes.json()  : { stats: null }
+      const reviewsData  = reviewsRes.ok   ? await reviewsRes.json()   : { count: 0 }
 
       const orders: RecentOrder[] = (ordersData.orders || []).map((o: Record<string, unknown>) => ({
         order_id:   o.order_id,
@@ -90,7 +91,7 @@ export default function DashboardPage() {
         item_count: Array.isArray(o.items) ? (o.items as unknown[]).length : 0,
       }))
 
-      const allOrders = ordersData.orders || []
+      const allOrders  = ordersData.orders || []
       const totalSpent = allOrders
         .filter((o: Record<string, unknown>) => o.status === 'completed')
         .reduce((sum: number, o: Record<string, unknown>) => sum + Number(o.total), 0)
@@ -102,7 +103,7 @@ export default function DashboardPage() {
         cancelledOrders: allOrders.filter((o: Record<string, unknown>) => o.status === 'cancelled').length,
         totalSpent,
         wishlistCount:   (wishlistData.ids || []).length,
-        reviewCount:     0, // placeholder — reviews don't have a "mine count" endpoint yet
+        reviewCount:     reviewsData.count || 0,
         referralCount:   parseInt(referralData.stats?.total_referrals || '0'),
       })
       setRecentOrders(orders.slice(0, 5))
@@ -168,10 +169,10 @@ export default function DashboardPage() {
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {[
-                { label: 'Total Orders',    value: stats.totalOrders,     icon: <ShoppingBag className="w-5 h-5" />,    color: 'text-purple-400',  href: '/orders' },
-                { label: 'Total Spent',     value: `₹${stats.totalSpent.toLocaleString('en-IN')}`, icon: <IndianRupee className="w-5 h-5" />, color: 'text-emerald-400', href: '/orders' },
-                { label: 'Saved Tools',     value: stats.wishlistCount,   icon: <Heart className="w-5 h-5" />,          color: 'text-red-400',     href: '/wishlist' },
-                { label: 'Referrals',       value: stats.referralCount,   icon: <TrendingUp className="w-5 h-5" />,     color: 'text-amber-400',   href: '/referral' },
+                { label: 'Total Orders',  value: stats.totalOrders,     icon: <ShoppingBag className="w-5 h-5" />,  color: 'text-purple-400',  href: '/orders' },
+                { label: 'Total Spent',   value: `₹${stats.totalSpent.toLocaleString('en-IN')}`, icon: <IndianRupee className="w-5 h-5" />, color: 'text-emerald-400', href: '/orders' },
+                { label: 'Saved Tools',   value: stats.wishlistCount,   icon: <Heart className="w-5 h-5" />,        color: 'text-red-400',     href: '/wishlist' },
+                { label: 'My Reviews',    value: stats.reviewCount,     icon: <Star className="w-5 h-5" />,         color: 'text-amber-400',   href: '/tools' },
               ].map(s => (
                 <Link key={s.label} href={s.href} className="glow-border rounded-2xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group">
                   <div className={`${s.color} mb-3 group-hover:scale-110 transition-transform`}>{s.icon}</div>

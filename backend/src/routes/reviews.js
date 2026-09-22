@@ -156,4 +156,35 @@ router.delete('/:reviewId', requireAuth, async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/reviews/mine/count
+// Returns the total number of reviews written by the logged-in user
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/mine/count', requireAuth, async (req, res, next) => {
+  try {
+    const result = await query(
+      'SELECT COUNT(*) AS count FROM tool_reviews WHERE user_id = $1',
+      [req.user.userId]
+    )
+    res.json({ count: parseInt(result.rows[0].count, 10) })
+  } catch (err) { next(err) }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/reviews/mine
+// Returns all reviews written by the logged-in user (with tool info)
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/mine', requireAuth, async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT id, tool_id, tool_slug, rating, title, body, helpful, created_at
+       FROM tool_reviews
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.user.userId]
+    )
+    res.json({ reviews: result.rows, count: result.rowCount })
+  } catch (err) { next(err) }
+})
+
 module.exports = router
