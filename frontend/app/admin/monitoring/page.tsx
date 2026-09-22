@@ -1,19 +1,11 @@
 'use client'
-/**
- * /admin/monitoring — Native React CloudWatch dashboard
- *
- * NO Grafana iframe. All data comes from /api/admin/monitoring/status
- * which queries AWS CloudWatch via the EC2 IAM role.
- *
- * Charts are pure SVG sparklines — zero external dependencies.
- */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Shield, LogOut, Activity, RefreshCw, AlertTriangle,
   Server, Database, Cloud, HardDrive, BarChart3,
-  Users, Mail, Clock, CheckCircle2, XCircle, Wifi,
+  Users, Mail, Clock, CheckCircle2, XCircle,
   TrendingUp, Cpu, Zap,
 } from 'lucide-react'
 
@@ -87,9 +79,20 @@ function Sparkline({
   unit?: string
   showDots?: boolean
 }) {
-  if (!values || values.length < 2) {
+  // Defensive: handle null/undefined/empty gracefully
+  if (!values || !Array.isArray(values) || values.length < 2) {
     return (
-      <div className="flex items-center justify-center h-12 text-slate-600 text-xs">
+      <div className="flex items-center justify-center text-slate-600 text-xs" style={{ height }}>
+        No data yet
+      </div>
+    )
+  }
+
+  // Filter out NaN/null/undefined
+  const safeValues = values.filter(v => typeof v === 'number' && isFinite(v))
+  if (safeValues.length < 2) {
+    return (
+      <div className="flex items-center justify-center text-slate-600 text-xs" style={{ height }}>
         No data yet
       </div>
     )
@@ -98,20 +101,20 @@ function Sparkline({
   const w = 280
   const h = height
   const pad = 4
-  const min = Math.min(...values)
-  const max = Math.max(...values)
+  const min = Math.min(...safeValues)
+  const max = Math.max(...safeValues)
   const range = max - min || 1
 
-  const pts = values.map((v, i) => {
-    const x = pad + (i / (values.length - 1)) * (w - pad * 2)
+  const pts = safeValues.map((v, i) => {
+    const x = pad + (i / (safeValues.length - 1)) * (w - pad * 2)
     const y = h - pad - ((v - min) / range) * (h - pad * 2)
-    return `${x},${y}`
+    return `${x.toFixed(1)},${y.toFixed(1)}`
   })
 
   const pathD = `M ${pts.join(' L ')}`
   const areaD = `M ${pts[0]} L ${pts.join(' L ')} L ${pad + (w - pad * 2)},${h - pad} L ${pad},${h - pad} Z`
 
-  const lastVal = values[values.length - 1]
+  const lastVal = safeValues[safeValues.length - 1]
   const lastPt  = pts[pts.length - 1].split(',')
 
   return (
@@ -207,17 +210,27 @@ function ChartCard({
   unit: string
   height?: number
 }) {
-  if (!series || series.values.length < 2) {
+  if (!series || !series.values || series.values.length < 2) {
     return (
       <div className="glow-border rounded-xl bg-[#0F0A1E] p-4">
         <p className="text-slate-400 text-xs font-medium mb-3">{title}</p>
-        <div className="flex items-center justify-center h-20 text-slate-600 text-xs">No data available</div>
+        <div className="flex items-center justify-center text-slate-600 text-xs" style={{ height }}>No data available</div>
       </div>
     )
   }
 
-  const min = Math.min(...series.values)
-  const max = Math.max(...series.values)
+  const safeVals = series.values.filter(v => typeof v === 'number' && isFinite(v))
+  if (safeVals.length < 2) {
+    return (
+      <div className="glow-border rounded-xl bg-[#0F0A1E] p-4">
+        <p className="text-slate-400 text-xs font-medium mb-3">{title}</p>
+        <div className="flex items-center justify-center text-slate-600 text-xs" style={{ height }}>No data available</div>
+      </div>
+    )
+  }
+
+  const min = Math.min(...safeVals)
+  const max = Math.max(...safeVals)
 
   return (
     <div className="glow-border rounded-xl bg-[#0F0A1E] p-4">
@@ -449,7 +462,7 @@ export default function MonitoringPage() {
                 />
                 <MetricCard
                   title="Network Out" value={s?.ec2_netout.values.length ? Math.round((s.ec2_netout.values.slice(-1)[0] || 0) / 1024) : null} unit=" KB/5min"
-                  series={s?.ec2_netout} color="text-violet-400" icon={Wifi}
+                  series={s?.ec2_netout} color="text-violet-400" icon={TrendingUp}
                   detail="Bytes sent per 5-minute period"
                 />
               </div>
