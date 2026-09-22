@@ -167,7 +167,7 @@ export default function ComparePage() {
             <BarChart3 className="w-8 h-8 text-purple-400" />
             Compare Cloud Services
           </h1>
-          <p className="text-slate-400">Side-by-side pricing comparison across AWS, Azure, GCP, ACE Cloud and Utho 🇮🇳.</p>
+          <p className="text-slate-400">Side-by-side pricing comparison across AWS, Azure, GCP and ACE Cloud.</p>
         </div>
 
         {/* Currency */}
@@ -345,17 +345,6 @@ export default function ComparePage() {
                         <p className="text-2xl font-extrabold text-white mb-0.5">{fmt(row.monthly)}</p>
                         <p className="text-xs text-slate-500">per month</p>
                         <p className="text-xs text-slate-600 mt-1">{fmt(row.annual)} / year</p>
-                        {row.provider === 'utho' && (
-                          <div className="mt-2 p-2 rounded-lg bg-orange-900/20 border border-orange-700/30">
-                            <p className="text-orange-300 text-[10px] flex items-start gap-1">
-                              🇮🇳 India-based · Storage + bandwidth bundled
-                            </p>
-                            <a href="https://utho.com/pricing" target="_blank" rel="noopener noreferrer"
-                              className="text-orange-400 text-[10px] hover:underline">
-                              Official pricing →
-                            </a>
-                          </div>
-                        )}
                         {row.note && (
                           <div className="mt-3 p-2 rounded-lg bg-amber-900/20 border border-amber-700/30">
                             <p className="text-amber-400 text-xs flex items-start gap-1">
@@ -430,10 +419,9 @@ export default function ComparePage() {
               <p className="text-xs text-sky-400/80 flex items-start gap-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 Pricing is based on On-Demand rates for {REGIONS.aws[0].name} (AWS), {REGIONS.azure[0].name} (Azure),
-                {' '}{REGIONS.gcp[0].name} (GCP), {REGIONS.ace[0].name} (ACE Cloud) and {REGIONS.utho[0].name} (Utho 🇮🇳).
-                Utho plans include NVMe storage + 1–6 TB/mo bandwidth bundled — no separate egress charge within allowance.
+                {' '}{REGIONS.gcp[0].name} (GCP) and {REGIONS.ace[0].name} (ACE Cloud).
                 Exact equivalents are used where available; otherwise the closest configuration is shown.
-                This is informational only — verify with official provider pages before provisioning.
+                This is informational only — verify with official provider pages.
                 Last updated: {DATA_LAST_UPDATED}.
               </p>
             </div>
