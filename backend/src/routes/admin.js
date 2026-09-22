@@ -125,128 +125,151 @@ router.patch('/users/:id/role', adminOnly, async (req, res, next) => {
 })
 
 // ── GET /api/admin/monitoring/status ─────────────────────────────────────────
-// Returns real-time AWS resource health from CloudWatch.
-// Uses the EC2 instance IAM role — NO static AWS credentials in code.
+// Returns real-time AWS resource health + time-series data from CloudWatch.
+// Reads credentials from ~/.aws/credentials (written by systemd timer from IMDS).
 // Only accessible by authenticated admins.
 router.get('/monitoring/status', adminOnly, async (req, res) => {
-  const region = process.env.AWS_REGION || 'ap-south-1'
+  const region     = process.env.AWS_REGION || 'ap-south-1'
+  const EC2_ID     = 'i-0bfe6016514b389ca'
+  const RDS_ID     = 'apkaai-db'
+  const HOURS_BACK = parseInt(req.query.hours || '3', 10)
 
   try {
     const {
       CloudWatchClient,
-      GetMetricStatisticsCommand,
+      GetMetricDataCommand,
     } = require('@aws-sdk/client-cloudwatch')
 
-    const cw = new CloudWatchClient({ region })
+    // Use credentials from ~/.aws/credentials (refreshed every 4h by systemd timer)
+    const cw  = new CloudWatchClient({ region })
     const now = new Date()
-    const start = new Date(now.getTime() - 10 * 60 * 1000) // last 10 min
+    const start = new Date(now.getTime() - HOURS_BACK * 60 * 60 * 1000)
 
-    // Helper: fetch a single CloudWatch metric
-    const getMetric = async (Namespace, MetricName, Dimensions, Statistic = 'Average') => {
-      try {
-        const cmd = new GetMetricStatisticsCommand({
-          Namespace, MetricName, Dimensions,
-          StartTime: start, EndTime: now,
-          Period: 300, Statistics: [Statistic],
-        })
-        const data = await cw.send(cmd)
-        const points = (data.Datapoints || []).sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp))
-        return points.length > 0 ? points[0][Statistic] : null
-      } catch {
-        return null
+    // Build multi-metric query — all in one call
+    const queries = [
+      // EC2
+      { Id: 'ec2_cpu',    MetricStat: { Metric: { Namespace: 'AWS/EC2',  MetricName: 'CPUUtilization',     Dimensions: [{ Name: 'InstanceId', Value: EC2_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'ec2_netin',  MetricStat: { Metric: { Namespace: 'AWS/EC2',  MetricName: 'NetworkIn',          Dimensions: [{ Name: 'InstanceId', Value: EC2_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'ec2_netout', MetricStat: { Metric: { Namespace: 'AWS/EC2',  MetricName: 'NetworkOut',         Dimensions: [{ Name: 'InstanceId', Value: EC2_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'ec2_status', MetricStat: { Metric: { Namespace: 'AWS/EC2',  MetricName: 'StatusCheckFailed',  Dimensions: [{ Name: 'InstanceId', Value: EC2_ID }] }, Period: 300, Stat: 'Maximum' }, ReturnData: true },
+      // RDS
+      { Id: 'rds_cpu',    MetricStat: { Metric: { Namespace: 'AWS/RDS',  MetricName: 'CPUUtilization',     Dimensions: [{ Name: 'DBInstanceIdentifier', Value: RDS_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'rds_conn',   MetricStat: { Metric: { Namespace: 'AWS/RDS',  MetricName: 'DatabaseConnections',Dimensions: [{ Name: 'DBInstanceIdentifier', Value: RDS_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'rds_free',   MetricStat: { Metric: { Namespace: 'AWS/RDS',  MetricName: 'FreeStorageSpace',   Dimensions: [{ Name: 'DBInstanceIdentifier', Value: RDS_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'rds_rl',     MetricStat: { Metric: { Namespace: 'AWS/RDS',  MetricName: 'ReadLatency',        Dimensions: [{ Name: 'DBInstanceIdentifier', Value: RDS_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+      { Id: 'rds_wl',     MetricStat: { Metric: { Namespace: 'AWS/RDS',  MetricName: 'WriteLatency',       Dimensions: [{ Name: 'DBInstanceIdentifier', Value: RDS_ID }] }, Period: 300, Stat: 'Average' }, ReturnData: true },
+    ]
+
+    const cmd = new GetMetricDataCommand({
+      MetricDataQueries: queries,
+      StartTime: start,
+      EndTime:   now,
+      ScanBy:    'TimestampAscending',
+    })
+
+    const result = await cw.send(cmd)
+
+    // Index results by Id
+    const byId = {}
+    for (const r of (result.MetricDataResults || [])) {
+      byId[r.Id] = {
+        timestamps: (r.Timestamps || []).map(t => new Date(t).toISOString()),
+        values:     r.Values || [],
+        label:      r.Label,
       }
     }
 
-    // Fetch metrics in parallel — gracefully handle partial failures
-    const [
-      ec2Cpu,
-      ec2StatusFail,
-      rdsCpu,
-      rdsConnections,
-      rdsFreeStorage,
-      cfRequests,
-      cfErrorRate,
-    ] = await Promise.all([
-      getMetric('AWS/EC2', 'CPUUtilization',    [], 'Average'),
-      getMetric('AWS/EC2', 'StatusCheckFailed', [], 'Maximum'),
-      getMetric('AWS/RDS', 'CPUUtilization',    [], 'Average'),
-      getMetric('AWS/RDS', 'DatabaseConnections',[], 'Average'),
-      getMetric('AWS/RDS', 'FreeStorageSpace',  [], 'Average'),
-      getMetric('AWS/CloudFront', 'Requests',   [{ Name: 'Region', Value: 'Global' }], 'Sum'),
-      getMetric('AWS/CloudFront', 'TotalErrorRate', [{ Name: 'Region', Value: 'Global' }], 'Average'),
-    ])
+    // Helper: last non-null value
+    const last = id => {
+      const v = byId[id]?.values
+      return v && v.length > 0 ? v[v.length - 1] : null
+    }
 
-    // Determine overall health
+    const ec2Cpu     = last('ec2_cpu')
+    const ec2Status  = last('ec2_status')
+    const rdsCpu     = last('rds_cpu')
+    const rdsConn    = last('rds_conn')
+    const rdsFree    = last('rds_free')
+
     const issues = []
-    if (ec2StatusFail !== null && ec2StatusFail > 0) issues.push('EC2 status check failed')
-    if (ec2Cpu !== null && ec2Cpu > 90)              issues.push('EC2 CPU critical')
-    if (rdsCpu !== null && rdsCpu > 80)              issues.push('RDS CPU high')
-    if (rdsFreeStorage !== null && rdsFreeStorage < 1073741824) issues.push('RDS storage low (<1GB)')
-    if (cfErrorRate !== null && cfErrorRate > 5)     issues.push('CloudFront error rate high')
+    if (ec2Status !== null && ec2Status > 0)          issues.push('EC2 status check failed')
+    if (ec2Cpu !== null && ec2Cpu > 90)               issues.push('EC2 CPU critical (>90%)')
+    if (rdsCpu !== null && rdsCpu > 80)               issues.push('RDS CPU high (>80%)')
+    if (rdsFree !== null && rdsFree < 1073741824)     issues.push('RDS free storage low (<1 GB)')
 
     const overallStatus = issues.length === 0 ? 'healthy' : issues.length <= 2 ? 'degraded' : 'critical'
 
     res.json({
-      ok:        true,
-      status:    overallStatus,
+      ok: true,
+      status: overallStatus,
       issues,
       timestamp: now.toISOString(),
       region,
+      ec2Id: EC2_ID,
+      rdsId: RDS_ID,
       resources: {
         ec2: {
-          status:   ec2StatusFail === 0 || ec2StatusFail === null ? 'running' : 'degraded',
-          cpu:      ec2Cpu !== null ? Math.round(ec2Cpu) : null,
-          statusCheck: ec2StatusFail,
+          status:      (ec2Status === 0 || ec2Status === null) ? 'running' : 'degraded',
+          cpu:         ec2Cpu !== null ? Math.round(ec2Cpu * 10) / 10 : null,
+          statusCheck: ec2Status,
         },
         rds: {
-          status:       rdsCpu !== null ? 'available' : 'unknown',
-          cpu:          rdsCpu !== null ? Math.round(rdsCpu) : null,
-          connections:  rdsConnections !== null ? Math.round(rdsConnections) : null,
-          freeStorageGB: rdsFreeStorage !== null ? Math.round(rdsFreeStorage / 1073741824 * 10) / 10 : null,
+          status:        rdsCpu !== null ? 'available' : 'unknown',
+          cpu:           rdsCpu !== null ? Math.round(rdsCpu * 10) / 10 : null,
+          connections:   rdsConn !== null ? Math.round(rdsConn) : null,
+          freeStorageGB: rdsFree !== null ? Math.round(rdsFree / 1073741824 * 10) / 10 : null,
+          readLatencyMs: (() => { const v = last('rds_rl'); return v !== null ? Math.round(v * 1000 * 10) / 10 : null })(),
+          writeLatencyMs:(() => { const v = last('rds_wl'); return v !== null ? Math.round(v * 1000 * 10) / 10 : null })(),
         },
-        cloudfront: {
-          status:    'operational',
-          requests:  cfRequests !== null ? Math.round(cfRequests) : null,
-          errorRate: cfErrorRate !== null ? Math.round(cfErrorRate * 10) / 10 : null,
-        },
-        s3: {
-          // S3 metrics are daily — report as available
-          status: 'available',
-        },
+        cloudfront: { status: 'operational', requests: null, errorRate: null },
+        s3:         { status: 'available' },
+      },
+      // Full time-series for charts
+      series: {
+        ec2_cpu:    byId['ec2_cpu']    || { timestamps: [], values: [] },
+        ec2_netin:  byId['ec2_netin']  || { timestamps: [], values: [] },
+        ec2_netout: byId['ec2_netout'] || { timestamps: [], values: [] },
+        rds_cpu:    byId['rds_cpu']    || { timestamps: [], values: [] },
+        rds_conn:   byId['rds_conn']   || { timestamps: [], values: [] },
+        rds_free:   byId['rds_free']   || { timestamps: [], values: [] },
+        rds_rl:     byId['rds_rl']     || { timestamps: [], values: [] },
+        rds_wl:     byId['rds_wl']     || { timestamps: [], values: [] },
       },
     })
   } catch (err) {
-    // CloudWatch SDK not available or IAM role missing
-    console.warn('[Monitoring] CloudWatch unavailable:', err.message)
+    console.warn('[Monitoring] CloudWatch error:', err.message)
     res.json({
-      ok:        false,
-      status:    'unknown',
-      error:     'CloudWatch data temporarily unavailable',
-      timestamp: new Date().toISOString(),
-      region,
+      ok: false, status: 'unknown',
+      error: 'CloudWatch data temporarily unavailable: ' + err.message,
+      timestamp: new Date().toISOString(), region,
+      ec2Id: 'i-0bfe6016514b389ca', rdsId: 'apkaai-db',
       resources: {
-        ec2:        { status: 'unknown', cpu: null },
-        rds:        { status: 'unknown', cpu: null, connections: null, freeStorageGB: null },
-        cloudfront: { status: 'unknown', requests: null, errorRate: null },
-        s3:         { status: 'unknown' },
+        ec2: { status: 'unknown', cpu: null },
+        rds: { status: 'unknown', cpu: null, connections: null, freeStorageGB: null, readLatencyMs: null, writeLatencyMs: null },
+        cloudfront: { status: 'unknown' }, s3: { status: 'unknown' },
+      },
+      series: {
+        ec2_cpu: { timestamps: [], values: [] }, ec2_netin: { timestamps: [], values: [] },
+        ec2_netout: { timestamps: [], values: [] }, rds_cpu: { timestamps: [], values: [] },
+        rds_conn: { timestamps: [], values: [] }, rds_free: { timestamps: [], values: [] },
+        rds_rl: { timestamps: [], values: [] }, rds_wl: { timestamps: [], values: [] },
       },
     })
   }
 })
 
 // ── GET /api/admin/monitoring/health ─────────────────────────────────────────
-// Lightweight liveness check — returns server uptime and memory.
 router.get('/monitoring/health', adminOnly, (req, res) => {
   const mem = process.memoryUsage()
   res.json({
-    ok:       true,
-    uptime:   Math.round(process.uptime()),
+    ok: true,
+    uptime: Math.round(process.uptime()),
     memory: {
       heapUsedMB:  Math.round(mem.heapUsed  / 1048576),
       heapTotalMB: Math.round(mem.heapTotal / 1048576),
       rssMB:       Math.round(mem.rss       / 1048576),
     },
-    node:     process.version,
+    node:      process.version,
     timestamp: new Date().toISOString(),
   })
 })
