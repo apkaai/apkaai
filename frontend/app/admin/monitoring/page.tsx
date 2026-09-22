@@ -150,7 +150,8 @@ export default function MonitoringPage() {
     { label: 'Users',      icon: Users,     href: '/admin' },
     { label: 'Contacts',   icon: Mail,      href: '/admin' },
     { label: 'Data Lake',  icon: HardDrive, href: '/admin' },
-    { label: 'Monitoring', icon: Activity,  href: '/admin/monitoring', active: true },
+    { label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring', active: true },
+    { label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' },
   ]
 
   return (

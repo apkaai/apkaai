@@ -101,7 +101,8 @@ export default function AdminDashboard() {
     { id: 'users',       label: 'Users',       icon: Users      },
     { id: 'contacts',    label: 'Contacts',    icon: Mail       },
     { id: 'datalake',    label: 'Data Lake',   icon: Database   },
-    { id: 'monitoring',  label: 'Monitoring',  icon: Activity,  href: '/admin/monitoring' } as const,
+    { id: 'monitoring',  label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring' } as const,
+    { id: 'grafana',     label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' } as const,
   ] as const
 
   return (
