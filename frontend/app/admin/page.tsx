@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
-  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight, Activity
+  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight, Zap, ExternalLink, Activity
 } from 'lucide-react'
 
 interface User   { user_id: string; name: string; email: string; role: string; created_at: string }
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     { id: 'users',       label: 'Users',       icon: Users      },
     { id: 'contacts',    label: 'Contacts',    icon: Mail       },
     { id: 'datalake',    label: 'Data Lake',   icon: Database   },
-    { id: 'monitoring',  label: 'Monitoring',  icon: Activity, href: '/admin/monitoring' },
+    { id: 'monitoring',  label: 'Monitoring',  icon: Activity,  href: '/admin/monitoring' } as const,
   ] as const
 
   return (
@@ -116,6 +116,10 @@ export default function AdminDashboard() {
               <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Control Panel</span>
             </div>
             <div className="flex items-center gap-3">
+              <Link href="/admin/datalake"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition-all">
+                <Database className="w-3.5 h-3.5" /> Data Lake
+              </Link>
               <Link href="/" className="text-slate-400 hover:text-white text-sm transition-colors">View Site</Link>
               <button onClick={signOut} className="flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm">
                 <LogOut className="w-4 h-4" /> Sign Out
@@ -128,7 +132,6 @@ export default function AdminDashboard() {
           {/* Tab nav */}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
             {tabs.map(t => {
-              // Monitoring links to its own page
               if ('href' in t && t.href) {
                 return (
                   <Link key={t.id} href={t.href}
@@ -161,7 +164,7 @@ export default function AdminDashboard() {
                 {[
                   { label: 'Total Users',     value: users.length,                              icon: Users,      color: 'text-purple-400' },
                   { label: 'Contacts Recv.',  value: contacts.length,                           icon: Mail,       color: 'text-blue-400' },
-                  { label: 'AI Tools',        value: 70,                                        icon: BarChart3,  color: 'text-emerald-400' },
+                  { label: 'AI Tools',        value: 43,                                        icon: BarChart3,  color: 'text-emerald-400' },
                   { label: 'Drive Files',     value: driveFiles.length,                         icon: Database,   color: 'text-amber-400' },
                 ].map(s => (
                   <div key={s.label} className="glow-border rounded-xl p-5 bg-[#0F0A1E]">
@@ -172,7 +175,23 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {/* Recent users */}
+              {/* Data Lake quick-access card */}
+              <Link href="/admin/datalake"
+                className="glow-border rounded-2xl bg-[#0F0A1E] p-5 flex items-center justify-between group hover:border-purple-500/60 transition-all cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-700/40 flex items-center justify-center group-hover:bg-purple-600/30 transition-all">
+                    <Database className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold">AWS Data Lake</h3>
+                    <p className="text-slate-400 text-sm">ETL pipelines · SQL queries · Analytics · S3 storage</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs bg-emerald-900/40 text-emerald-400 border border-emerald-700/30 px-2 py-1 rounded-full">Live</span>
+                  <ExternalLink className="w-4 h-4 text-slate-500 group-hover:text-purple-400 transition-colors" />
+                </div>
+              </Link>
               <div className="glow-border rounded-2xl bg-[#0F0A1E] overflow-hidden">
                 <div className="flex items-center justify-between p-5 border-b border-purple-900/30">
                   <h2 className="font-bold text-white">Recent Signups</h2>
@@ -310,9 +329,37 @@ export default function AdminDashboard() {
           {/* ── DATA LAKE ─────────────────────────────────────────────────── */}
           {tab === 'datalake' && (
             <div className="space-y-6">
+              {/* Hero card linking to full datalake */}
+              <Link href="/admin/datalake"
+                className="glow-border rounded-2xl bg-gradient-to-r from-purple-900/30 to-violet-900/20 border-purple-700/40 p-8 flex items-center justify-between group hover:border-purple-500 transition-all cursor-pointer block">
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
+                      <Database className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-extrabold text-white">Open Full Data Lake</h2>
+                      <p className="text-slate-400 text-sm">ETL · SQL Runner · Athena · S3 Browser · Analytics</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {['Upload CSV/Excel/JSON','SQL Query Runner','Google Drive ETL','S3 Lake Browser','Analytics Charts','Athena Queries'].map(f => (
+                      <span key={f} className="text-xs bg-purple-950/60 border border-purple-800/40 text-purple-300 px-2.5 py-1 rounded-full">{f}</span>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex-shrink-0 ml-6">
+                  <div className="flex items-center gap-2 btn-primary text-white font-bold px-6 py-3 rounded-xl group-hover:scale-105 transition-transform">
+                    <Zap className="w-4 h-4" /> Open Data Lake
+                    <ExternalLink className="w-4 h-4 ml-1" />
+                  </div>
+                </div>
+              </Link>
+
+              {/* Quick stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { label: 'RDS PostgreSQL', status: 'Connected', color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-700/40', icon: Database, detail: 'apkaai-db.cl8qcg44s0p7.ap-south-1.rds.amazonaws.com' },
+                  { label: 'RDS PostgreSQL', status: 'Connected', color: 'text-emerald-400', bg: 'bg-emerald-900/20 border-emerald-700/40', icon: Database, detail: 'apkaai-db · Read replica active' },
                   { label: 'Google Drive',   status: driveFiles.length > 0 ? 'Connected' : 'Pending API Key', color: driveFiles.length > 0 ? 'text-emerald-400' : 'text-amber-400', bg: 'bg-blue-900/20 border-blue-700/40', icon: Database, detail: 'drive.google.com/drive/folders/1DSp2...' },
                   { label: 'Total Records',  status: `${users.length + contacts.length}`, color: 'text-purple-400', bg: 'bg-purple-900/20 border-purple-700/40', icon: TrendingUp, detail: `${users.length} users + ${contacts.length} contacts` },
                 ].map(s => (
@@ -328,7 +375,7 @@ export default function AdminDashboard() {
               {/* PostgreSQL data */}
               <div className="glow-border rounded-2xl bg-[#0F0A1E] overflow-hidden">
                 <div className="flex items-center justify-between p-5 border-b border-purple-900/30">
-                  <h2 className="font-bold text-white flex items-center gap-2"><Database className="w-5 h-5 text-emerald-400" /> PostgreSQL Data</h2>
+                  <h2 className="font-bold text-white flex items-center gap-2"><Database className="w-5 h-5 text-emerald-400" /> PostgreSQL Data Preview</h2>
                   <button onClick={() => exportCSV([...users, ...contacts.map(c => ({...c, type:'contact'}))], 'apkaai-datalake.csv')}
                     className="flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg">
                     <Download className="w-4 h-4" /> Export All

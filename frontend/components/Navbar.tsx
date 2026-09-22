@@ -3,16 +3,16 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart } from 'lucide-react'
+import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import HoverPreview from '@/components/HoverPreview'
-import { useCart } from '@/lib/cart-context'
 
 const navLinks = [
   { label: 'All Tools',  href: '/tools' },
   { label: 'Categories', href: '/tools#categories' },
   { label: 'Compare',    href: '/compare' },
   { label: 'Pricing',    href: '/pricing' },
+  { label: 'Plans',      href: '/plans' },
   { label: 'Blog',       href: '/blog' },
   { label: 'Contact',    href: '/contact' },
   { label: 'Cloud',      href: '/cloud' },
@@ -48,7 +48,6 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false)
   const searchInputRef              = useRef<HTMLInputElement>(null)
   const profileRef                  = useRef<HTMLDivElement>(null)
-  const { itemCount, toggleDrawer } = useCart()
 
   // Load user from storage on mount
   useEffect(() => {
@@ -103,7 +102,7 @@ export default function Navbar() {
             <HoverPreview
               key={link.href}
               label={
-                link.label === 'All Tools'  ? 'View all 70 AI tools' :
+                link.label === 'All Tools'  ? 'View all 43 AI tools' :
                 link.label === 'Categories' ? 'Browse tools by category' :
                 link.label === 'Compare'    ? 'Compare AI tools side by side' :
                 link.label === 'Pricing'    ? 'See pricing plans in INR' :
@@ -129,24 +128,8 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Cart */}
-          <HoverPreview label="Your cart" icon={<ShoppingCart className="w-3.5 h-3.5" />}>
-            <button
-              onClick={toggleDrawer}
-              aria-label={`Cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
-              className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/30 transition-all"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
-                  {itemCount > 9 ? '9+' : itemCount}
-                </span>
-              )}
-            </button>
-          </HoverPreview>
-
           {/* Search */}
-          <HoverPreview label="Search across all 70 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
+          <HoverPreview label="Search across all 43 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
             <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
               className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
               {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
@@ -273,17 +256,6 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {/* Cart link in mobile menu */}
-          <Link href="/cart" onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-purple-900/30 rounded-lg text-sm font-medium">
-            <ShoppingCart className="w-4 h-4 text-purple-400" />
-            Cart
-            {itemCount > 0 && (
-              <span className="ml-auto w-5 h-5 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">
-                {itemCount}
-              </span>
-            )}
-          </Link>
           <div className="pt-3 border-t border-purple-900/30 grid grid-cols-2 gap-2">
             {user ? (
               <>
