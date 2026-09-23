@@ -3,9 +3,10 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud } from 'lucide-react'
+import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import HoverPreview from '@/components/HoverPreview'
+import { useCart } from '@/lib/cart-context'
 
 const navLinks = [
   { label: 'All Tools',  href: '/tools' },
@@ -57,6 +58,8 @@ export default function Navbar() {
     window.addEventListener('storage', handler)
     return () => window.removeEventListener('storage', handler)
   }, [])
+
+  const { itemCount, toggleDrawer } = useCart()
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -133,6 +136,22 @@ export default function Navbar() {
             <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
               className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
               {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+            </button>
+          </HoverPreview>
+
+          {/* Cart */}
+          <HoverPreview label="View your cart">
+            <button
+              onClick={toggleDrawer}
+              aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+              className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/30 transition-all"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-purple-600 text-white text-[10px] font-bold rounded-full px-1 leading-none shadow-glow-sm">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
             </button>
           </HoverPreview>
 
@@ -257,6 +276,12 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-3 border-t border-purple-900/30 grid grid-cols-2 gap-2">
+            {/* Cart link in mobile menu */}
+            <Link href="/cart" onClick={() => setOpen(false)}
+              className="col-span-2 flex items-center justify-center gap-2 border border-purple-700/40 text-slate-300 hover:text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:border-purple-500 transition-all">
+              <ShoppingCart className="w-4 h-4" />
+              Cart{itemCount > 0 && <span className="ml-1 bg-purple-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{itemCount}</span>}
+            </Link>
             {user ? (
               <>
                 <Link href="/profile" onClick={() => setOpen(false)}
