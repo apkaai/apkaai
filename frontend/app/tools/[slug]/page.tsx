@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Star, ExternalLink, Check, ArrowRight, Globe, Tag, Zap } from 'lucide-react'
 import ToolCard from '@/components/ToolCard'
 import { getToolBySlug, getToolsByCategory, tools, categories } from '@/lib/tools-data'
-import { SidebarCartCTA, PlanCartButton } from './ToolDetailCartSection'
+import { SidebarCartCTA, PlanCartButton, PaywallVisitButton, PaywallDealButton } from './ToolDetailCartSection'
 
 interface Props { params: { slug: string } }
 
@@ -179,25 +179,11 @@ export default function ToolDetailPage({ params }: Props) {
                 </span>
               </div>
 
-              {/* Visit button */}
-              <a
-                href={tool.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary flex items-center justify-center gap-2 text-white font-bold px-6 py-3.5 rounded-xl w-full text-sm shadow-glow-sm mb-3"
-              >
-                Visit {tool.name}
-                <ExternalLink className="w-4 h-4" />
-              </a>
+              {/* Visit button — requires active plan */}
+              <PaywallVisitButton href={tool.website} label={`Visit ${tool.name}`} />
 
-              {/* Get Deal / Discount — now routes to custom deal page */}
-              <Link
-                href={`/deals/${tool.slug}`}
-                className="w-full flex items-center justify-center gap-2 border border-purple-700/40 hover:border-purple-500 text-slate-300 hover:text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all bg-purple-950/20 hover:bg-purple-900/20"
-              >
-                Get Deal / Discount
-                <Tag className="w-4 h-4" />
-              </Link>
+              {/* Get Deal / Discount — requires active plan */}
+              <PaywallDealButton slug={tool.slug} />
 
               {/* Add to Cart */}
               <SidebarCartCTA tool={tool} />
