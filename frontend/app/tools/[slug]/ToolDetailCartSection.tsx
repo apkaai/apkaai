@@ -1,31 +1,32 @@
 'use client'
-/**
- * Client component that injects Add-to-Cart into the tool detail page.
- * Rendered inside the (server) /tools/[slug]/page.tsx.
- */
 import { useState } from 'react'
-import { ShoppingCart, Check } from 'lucide-react'
+import { ShoppingCart, Check, Lock } from 'lucide-react'
 import AddToCartButton from '@/components/cart/AddToCartButton'
 import PlanModal from '@/components/cart/PlanModal'
 import { useCart } from '@/lib/cart-context'
+import { useSubscription } from '@/lib/use-subscription'
 import type { AITool, PricingPlan } from '@/lib/tools-data'
 import type { BillingCycle } from '@/lib/cart-context'
 import Link from 'next/link'
 
-// ── Sidebar CTA (replaces / complements the existing "Visit" button) ──────────
+// ── Sidebar CTA ───────────────────────────────────────────────────────────────
 export function SidebarCartCTA({ tool }: { tool: AITool }) {
-  const { isInCart, itemCount } = useCart()
-  const inCart = isInCart(tool.id)
+  const { isInCart } = useCart()
+  const { requirePlan } = useSubscription()
+  const inCart   = isInCart(tool.id)
   const [showModal, setShowModal] = useState(false)
-
-  const plans   = tool.pricingPlans ?? []
+  const plans    = tool.pricingPlans ?? []
   const hasPlans = plans.length > 0
+
+  function handleOpen() {
+    requirePlan(() => setShowModal(true))
+  }
 
   return (
     <>
       {hasPlans ? (
         <button
-          onClick={() => setShowModal(true)}
+          onClick={handleOpen}
           className={`w-full flex items-center justify-center gap-2 font-bold px-6 py-3.5 rounded-xl text-sm transition-all ${
             inCart
               ? 'bg-purple-600/20 border border-purple-500/60 text-purple-300 hover:bg-purple-600/30'
@@ -33,15 +34,9 @@ export function SidebarCartCTA({ tool }: { tool: AITool }) {
           }`}
         >
           {inCart ? (
-            <>
-              <Check className="w-4 h-4" />
-              In Cart — Change Plan
-            </>
+            <><Check className="w-4 h-4" />In Cart — Change Plan</>
           ) : (
-            <>
-              <ShoppingCart className="w-4 h-4" />
-              Add to Cart
-            </>
+            <><ShoppingCart className="w-4 h-4" />Add to Cart</>
           )}
         </button>
       ) : (
@@ -49,51 +44,40 @@ export function SidebarCartCTA({ tool }: { tool: AITool }) {
       )}
 
       {inCart && (
-        <Link
-          href="/cart"
-          className="block text-center text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 mt-2 transition-colors"
-        >
+        <Link href="/cart"
+          className="block text-center text-xs text-purple-400 hover:text-purple-300 underline underline-offset-2 mt-2 transition-colors">
           View Cart
         </Link>
       )}
 
-      {showModal && (
-        <PlanModal
-          tool={tool}
-          onClose={() => setShowModal(false)}
-        />
-      )}
+      {showModal && <PlanModal tool={tool} onClose={() => setShowModal(false)} />}
     </>
   )
 }
 
-// ── Per-plan "Add" button inside the Pricing Plans grid ──────────────────────
-export function PlanCartButton({
-  tool,
-  plan,
-}: {
-  tool: AITool
-  plan: PricingPlan
-}) {
+// ── Per-plan button ───────────────────────────────────────────────────────────
+export function PlanCartButton({ tool, plan }: { tool: AITool; plan: PricingPlan }) {
   const { addItem, isInCart, getItemByTool, updatePlan } = useCart()
-  const [billing, setBilling] = useState<BillingCycle>('monthly')
-  const [added,   setAdded]   = useState(false)
+  const { requirePlan } = useSubscription()
+  const [billing]  = useState<BillingCycle>('monthly')
+  const [added, setAdded] = useState(false)
 
   const existingItem = getItemByTool(tool.id)
   const thisInCart   = existingItem?.planName === plan.name
 
   function handleClick() {
-    if (existingItem && !thisInCart) {
-      // Replace plan
-      updatePlan(existingItem.key, plan, billing)
-    } else if (!existingItem) {
-      addItem(tool, plan, billing)
-    }
-    setAdded(true)
-    setTimeout(() => setAdded(false), 2000)
+    requirePlan(() => {
+      if (existingItem && !thisInCart) {
+        updatePlan(existingItem.key, plan, billing)
+      } else if (!existingItem) {
+        addItem(tool, plan, billing)
+      }
+      setAdded(true)
+      setTimeout(() => setAdded(false), 2000)
+    })
   }
 
-  if (plan.monthly === 0) return null // No cart button for free plans
+  if (plan.monthly === 0) return null
 
   return (
     <button
@@ -113,6 +97,41 @@ export function PlanCartButton({
       ) : (
         <><ShoppingCart className="w-3.5 h-3.5" /> Add to Cart</>
       )}
+    </button>
+  )
+}
+
+// ── Paywall-guarded Visit + Deal buttons (used in sidebar) ────────────────────
+export function PaywallVisitButton({ href, label }: { href: string; label: string }) {
+  const { requirePlan } = useSubscription()
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault()
+    requirePlan(() => window.open(href, '_blank', 'noopener,noreferrer'))
+  }
+
+  return (
+    <a href={href} onClick={handleClick}
+      className="btn-primary flex items-center justify-center gap-2 text-white font-bold px-6 py-3.5 rounded-xl w-full text-sm shadow-glow-sm mb-3">
+      {label}
+      <Lock className="w-4 h-4" />
+    </a>
+  )
+}
+
+export function PaywallDealButton({ slug }: { slug: string }) {
+  const { requirePlan } = useSubscription()
+
+  function handleClick(e: React.MouseEvent) {
+    e.preventDefault()
+    requirePlan(() => { window.location.href = `/deals/${slug}` })
+  }
+
+  return (
+    <button onClick={handleClick}
+      className="w-full flex items-center justify-center gap-2 border border-purple-700/40 hover:border-purple-500 text-slate-300 hover:text-white font-semibold px-6 py-3 rounded-xl text-sm transition-all bg-purple-950/20 hover:bg-purple-900/20">
+      Get Deal / Discount
+      <Lock className="w-4 h-4" />
     </button>
   )
 }
