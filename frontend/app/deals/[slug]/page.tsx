@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ExternalLink, Tag, Star, Check, ArrowLeft, Zap, Clock, Shield } from 'lucide-react'
+import { Tag, Star, Check, ArrowLeft, Zap, Clock, Shield } from 'lucide-react'
 import { getToolBySlug, tools } from '@/lib/tools-data'
+import DealCTAButtons from './DealCTAButtons'
 
 export async function generateStaticParams() {
   return tools.map(t => ({ slug: t.slug }))
@@ -20,9 +21,8 @@ export default function DealPage({ params }: { params: { slug: string } }) {
   const tool = getToolBySlug(params.slug)
   if (!tool) notFound()
 
-  const freePlan = tool.pricingPlans?.find(p => p.monthly === 0)
+  const freePlan  = tool.pricingPlans?.find(p => p.monthly === 0)
   const paidPlans = tool.pricingPlans?.filter(p => p.monthly > 0) || []
-  const bestDeal  = paidPlans.find(p => p.popular) || paidPlans[0]
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-4">
@@ -46,7 +46,6 @@ export default function DealPage({ params }: { params: { slug: string } }) {
           </h1>
           <p className="text-slate-400 text-lg max-w-xl mx-auto mb-6">{tool.tagline}</p>
 
-          {/* Rating */}
           <div className="flex items-center justify-center gap-2 mb-6">
             {[1,2,3,4,5].map(i => (
               <Star key={i} className={`w-5 h-5 ${i <= Math.round(tool.rating) ? 'text-amber-400 fill-amber-400' : 'text-slate-600'}`} />
@@ -55,13 +54,13 @@ export default function DealPage({ params }: { params: { slug: string } }) {
             <span className="text-slate-400">({tool.reviews.toLocaleString()} reviews)</span>
           </div>
 
-          {/* Main CTA */}
-          <a href={tool.website} target="_blank" rel="noopener noreferrer"
-            className="btn-primary inline-flex items-center gap-3 text-white font-bold px-10 py-4 rounded-xl text-lg shadow-glow-md hover:scale-105 transition-all">
-            <Zap className="w-5 h-5" fill="white" />
-            Claim Best Deal on {tool.name}
-            <ExternalLink className="w-5 h-5" />
-          </a>
+          {/* Main CTA — PAYWALLED */}
+          <DealCTAButtons
+            website={tool.website}
+            toolName={tool.name}
+            freePlan={freePlan ? { features: freePlan.features, name: freePlan.name } : undefined}
+            paidPlans={paidPlans.map(p => ({ name: p.name, price: p.price, features: p.features, popular: p.popular }))}
+          />
 
           <div className="flex items-center justify-center gap-6 mt-4 text-slate-500 text-xs">
             <span className="flex items-center gap-1"><Shield className="w-3.5 h-3.5" /> Safe & Official</span>
@@ -69,60 +68,6 @@ export default function DealPage({ params }: { params: { slug: string } }) {
             <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5" /> No Hidden Fees</span>
           </div>
         </div>
-
-        {/* Free plan highlight */}
-        {freePlan && (
-          <div className="glow-border rounded-2xl p-6 bg-emerald-900/10 border-emerald-700/30 mb-6">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">🆓</span>
-              <div>
-                <h2 className="text-lg font-bold text-white">Start Free — No Credit Card</h2>
-                <p className="text-emerald-400 text-sm">{freePlan.name} plan is completely free</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-              {freePlan.features.map(f => (
-                <div key={f} className="flex items-center gap-2 text-sm text-slate-300">
-                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />{f}
-                </div>
-              ))}
-            </div>
-            <a href={tool.website} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2.5 rounded-xl text-sm transition-all">
-              Start Free <ExternalLink className="w-4 h-4" />
-            </a>
-          </div>
-        )}
-
-        {/* Pricing plans */}
-        {paidPlans.length > 0 && (
-          <div className="glow-border rounded-2xl p-6 bg-[#0F0A1E] mb-6">
-            <h2 className="text-xl font-bold text-white mb-5">Choose Your Plan</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {paidPlans.map(plan => (
-                <div key={plan.name}
-                  className={`rounded-xl p-5 border transition-all ${plan.popular ? 'border-purple-500/60 bg-purple-900/20' : 'border-purple-900/40 bg-purple-950/20'}`}>
-                  {plan.popular && (
-                    <span className="inline-block bg-purple-600 text-white text-xs font-bold px-2 py-0.5 rounded-full mb-2">Most Popular</span>
-                  )}
-                  <div className="font-bold text-white text-base mb-1">{plan.name}</div>
-                  <div className="text-2xl font-extrabold text-purple-300 mb-3">{plan.price}</div>
-                  <ul className="space-y-1.5 mb-4">
-                    {plan.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-xs text-slate-300">
-                        <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />{f}
-                      </li>
-                    ))}
-                  </ul>
-                  <a href={tool.website} target="_blank" rel="noopener noreferrer"
-                    className={`flex items-center justify-center gap-2 w-full font-semibold py-2.5 rounded-xl text-sm transition-all ${plan.popular ? 'btn-primary text-white' : 'border border-purple-700/40 text-slate-300 hover:border-purple-500 hover:text-white'}`}>
-                    Get {plan.name} <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-2 mb-8">
@@ -133,7 +78,7 @@ export default function DealPage({ params }: { params: { slug: string } }) {
           ))}
         </div>
 
-        {/* Other deals CTA */}
+        {/* Browse more */}
         <div className="text-center">
           <p className="text-slate-400 mb-4">Looking for more AI tool deals?</p>
           <Link href="/pricing"
