@@ -6,7 +6,7 @@ import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
   TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight,
   ShoppingBag, Package, CheckCircle, XCircle, Clock, RotateCcw,
-  IndianRupee, ChevronDown, ChevronUp
+  IndianRupee, ChevronDown, ChevronUp, ExternalLink
 } from 'lucide-react'
 
 interface User    { user_id: string; name: string; email: string; role: string; created_at: string }
