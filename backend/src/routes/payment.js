@@ -11,6 +11,7 @@ const express  = require('express')
 const router   = express.Router()
 const crypto   = require('crypto')
 const { query } = require('../lib/db')
+const { sendPaymentInvoiceEmail, sendPaymentAdminAlert } = require('../lib/mailer')
 
 // ── Plan definitions ──────────────────────────────────────────────────────────
 const PLANS = {
@@ -224,6 +225,26 @@ router.post('/verify', authRequired, async (req, res, next) => {
       ).catch(() => {})
     }
 
+    // Send invoice + admin notification emails (fire-and-forget — never block the response)
+    const emailPayload = {
+      userEmail:    payment.user_email,
+      userName:     payment.user_name,
+      planName:     payment.plan_name,
+      planId:       payment.plan_id,
+      amountInr:    payment.amount_inr,
+      billingCycle: payment.billing_cycle,
+      paymentId:    razorpay_payment_id,
+      orderId:      razorpay_order_id,
+      verifiedAt:   payment.verified_at,
+    }
+    Promise.all([
+      sendPaymentInvoiceEmail(emailPayload),
+      sendPaymentAdminAlert(emailPayload),
+    ]).then(([invoiceResult, adminResult]) => {
+      if (!invoiceResult.ok) console.warn('[Payment] Invoice email failed:', invoiceResult.reason)
+      if (!adminResult.ok)  console.warn('[Payment] Admin alert email failed:', adminResult.reason)
+    }).catch(err => console.error('[Payment] Email error:', err.message))
+
     res.json({
       success:    true,
       message:    'Payment verified successfully! 🎉',
@@ -271,6 +292,35 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             updated_at          = NOW()
         WHERE razorpay_order_id = $2 AND status != 'paid'
       `, [p.id, p.order_id]).catch(e => console.error('[Webhook DB]', e.message))
+
+      // Fetch full payment record and send confirmation emails
+      query(`SELECT * FROM payments WHERE razorpay_order_id = $1 LIMIT 1`, [p.order_id])
+        .then(result => {
+          const pmt = result.rows[0]
+          if (!pmt || !pmt.user_email) return
+          const emailPayload = {
+            userEmail:    pmt.user_email,
+            userName:     pmt.user_name,
+            planName:     pmt.plan_name,
+            planId:       pmt.plan_id,
+            amountInr:    pmt.amount_inr,
+            billingCycle: pmt.billing_cycle,
+            paymentId:    p.id,
+            orderId:      p.order_id,
+            verifiedAt:   new Date(),
+          }
+          return Promise.all([
+            sendPaymentInvoiceEmail(emailPayload),
+            sendPaymentAdminAlert(emailPayload),
+          ])
+        })
+        .then(results => {
+          if (!results) return
+          const [inv, adm] = results
+          if (!inv?.ok) console.warn('[Webhook] Invoice email failed:', inv?.reason)
+          if (!adm?.ok) console.warn('[Webhook] Admin alert failed:', adm?.reason)
+        })
+        .catch(err => console.error('[Webhook] Email error:', err.message))
     }
 
     if (event.event === 'payment.failed') {
