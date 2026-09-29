@@ -1,14 +1,14 @@
 /**
- * useSubscription — checks if the current user has an active paid plan
+ * useSubscription — checks if the current user has access
  *
- * Rules:
- *  - If NOT logged in   → redirect to /signin?redirect=...
- *  - If logged in but NO paid plan → redirect to /plans
- *  - If logged in WITH paid plan  → allow action
+ * ApkaAI uses a per-tool cart + Razorpay checkout model.
+ * There is NO global subscription gate — any logged-in user
+ * can add tools to cart and purchase individually.
  *
- * Usage:
- *   const { requirePlan } = useSubscription()
- *   <button onClick={() => requirePlan(() => doSomething())}>Buy</button>
+ * This hook is kept for compatibility but:
+ *  - isSubscribed() returns true for ANY logged-in user
+ *  - requirePlan() only redirects to signin if not logged in
+ *  - Admin users always have access
  */
 'use client'
 import { useCallback } from 'react'
@@ -18,7 +18,7 @@ interface SubscriptionUser {
   userId: string
   email:  string
   role:   string
-  plan?:  string    // 'basic' | 'pro' | 'enterprise' — set after payment
+  plan?:  string
 }
 
 function getUser(): SubscriptionUser | null {
@@ -35,29 +35,14 @@ function getToken(): string | null {
 }
 
 /**
- * Check if the user has an active subscription.
- * We check 3 signals (in order):
- *  1. In-memory: apkaai_user.plan is set to a known plan
- *  2. localStorage flag: apkaai_subscribed = 'true' (set after successful payment)
- *  3. Admin users always get access
+ * Any logged-in user has access.
+ * Individual tool purchases are handled via cart + Razorpay.
  */
 export function isSubscribed(): boolean {
-  const user  = getUser()
   const token = getToken()
-  if (!token || !user) return false
-
-  // Admins always have access
-  if (user.role === 'admin') return true
-
-  // Check plan field on user object
-  const PAID_PLANS = ['basic', 'pro', 'enterprise']
-  if (user.plan && PAID_PLANS.includes(user.plan)) return true
-
-  // Check localStorage subscription flag (set by payment success page)
-  const flag = localStorage.getItem('apkaai_subscribed')
-  if (flag === 'true') return true
-
-  return false
+  const user  = getUser()
+  // Simply: logged in = access granted
+  return !!(token && user)
 }
 
 export function useSubscription() {
@@ -65,9 +50,8 @@ export function useSubscription() {
 
   /**
    * requirePlan(action, redirectBackTo?)
-   * - If not logged in  → go to /signin with redirect
-   * - If no active plan → go to /plans with a message
-   * - If subscribed     → run action()
+   * - If not logged in → go to /signin with redirect
+   * - If logged in     → run action() immediately (no paywall)
    */
   const requirePlan = useCallback((
     action: () => void,
@@ -77,16 +61,12 @@ export function useSubscription() {
     const user  = getUser()
 
     if (!token || !user) {
-      const back = redirectBackTo || (typeof window !== 'undefined' ? window.location.pathname : '/plans')
-      router.push(`/signin?redirect=${encodeURIComponent(back)}&reason=purchase`)
+      const back = redirectBackTo || (typeof window !== 'undefined' ? window.location.pathname : '/')
+      router.push(`/signin?redirect=${encodeURIComponent(back)}`)
       return
     }
 
-    if (!isSubscribed()) {
-      router.push('/plans?reason=access')
-      return
-    }
-
+    // Logged in — allow the action immediately
     action()
   }, [router])
 

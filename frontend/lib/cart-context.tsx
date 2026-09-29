@@ -44,6 +44,8 @@ interface CartContextValue {
   addItem: (tool: AITool, plan: PricingPlan, billing?: BillingCycle) => void
   removeItem: (key: string) => void
   updatePlan: (key: string, newPlan: PricingPlan, billing?: BillingCycle) => void
+  incrementItem: (key: string) => void
+  decrementItem: (key: string) => void
   clearCart: () => void
   isInCart: (toolId: string, planName?: string) => boolean
   getItemByTool: (toolId: string) => CartItem | undefined
@@ -183,6 +185,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = useCallback(() => setItems([]), [])
 
+  const incrementItem = useCallback((key: string) => {
+    setItems(prev => prev.map(i => i.key === key ? { ...i, quantity: i.quantity + 1 } : i))
+  }, [])
+
+  const decrementItem = useCallback((key: string) => {
+    setItems(prev => {
+      const item = prev.find(i => i.key === key)
+      if (!item) return prev
+      if (item.quantity <= 1) return prev.filter(i => i.key !== key) // remove at 0
+      return prev.map(i => i.key === key ? { ...i, quantity: i.quantity - 1 } : i)
+    })
+  }, [])
+
   // ── Queries ────────────────────────────────────────────────────────────────
   const isInCart = useCallback(
     (toolId: string, planName?: string) => {
@@ -205,8 +220,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     <CartContext.Provider value={{
       items, itemCount, subtotal,
       isDrawerOpen, openDrawer, closeDrawer, toggleDrawer,
-      addItem, removeItem, updatePlan, clearCart,
-      isInCart, getItemByTool,
+      addItem, removeItem, updatePlan,
+      incrementItem, decrementItem,
+      clearCart, isInCart, getItemByTool,
     }}>
       {children}
     </CartContext.Provider>
