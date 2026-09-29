@@ -2,8 +2,8 @@ const express   = require('express')
 const router    = express.Router()
 const crypto    = require('crypto')
 const Razorpay  = require('razorpay')
-const nodemailer = require('nodemailer')
 const { query } = require('../lib/db')
+const { sendEmail } = require('../services/emailService')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Razorpay instance (lazy — only initialised when keys are present)
@@ -42,24 +42,28 @@ function requireAuth(req, res, next) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email helpers
+// Email helpers — now powered by SES via emailService (SMTP fallback built-in)
 // ─────────────────────────────────────────────────────────────────────────────
-function buildTransporter() {
-  const host = process.env.SMTP_HOST
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
-  if (!host || !user || !pass) return null
-  return nodemailer.createTransport({
-    host,
-    port:   parseInt(process.env.SMTP_PORT || '587', 10),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth:   { user, pass },
-    connectionTimeout: 10000,
-    socketTimeout:     15000,
-  })
-}
+async function sendOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId }) {
+  const subject    = `✅ Order Confirmed — #${orderId.slice(0,8).toUpperCase()} | ApkaAI`
+  const html       = buildOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId })
+  const text       = [
+    `Hi ${userName}, your ApkaAI order is confirmed!`,
+    `Order ID: #${orderId.slice(0,8).toUpperCase()}`,
+    `Payment ID: ${paymentId || 'N/A'}`,
+    `Total Paid: ₹${Number(total).toLocaleString('en-IN')}`,
+    '',
+    `View your orders: ${(process.env.FRONTEND_URL || 'https://apkaai.com').replace(/\/$/, '')}/orders`,
+  ].join('\n')
 
-function buildOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId }) {
+  const result = await sendEmail(userEmail, subject, html, text)
+  if (!result.ok) {
+    console.warn(`[Payment] Confirmation email not sent to ${userEmail}: ${result.reason}`)
+  } else {
+    console.log(`[Payment] Confirmation email sent via ${result.provider} to ${userEmail}`)
+  }
+  return result
+}
   const year     = new Date().getFullYear()
   const frontendUrl = (process.env.FRONTEND_URL || 'https://apkaai.com').replace(/\/$/, '')
   const orderUrl = `${frontendUrl}/orders`
@@ -197,36 +201,6 @@ function buildOrderConfirmationEmail({ userName, userEmail, orderId, items, subt
   </table>
 </body>
 </html>`
-}
-
-async function sendOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId }) {
-  const transporter = buildTransporter()
-  if (!transporter) {
-    console.warn('[Payment] SMTP not configured — skipping confirmation email')
-    return { ok: false, reason: 'SMTP_NOT_CONFIGURED' }
-  }
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER
-  try {
-    await transporter.sendMail({
-      from:    `"ApkaAI" <${from}>`,
-      to:      userEmail,
-      subject: `✅ Order Confirmed — #${orderId.slice(0,8).toUpperCase()} | ApkaAI`,
-      html:    buildOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId }),
-      text: [
-        `Hi ${userName}, your ApkaAI order is confirmed!`,
-        `Order ID: #${orderId.slice(0,8).toUpperCase()}`,
-        `Payment ID: ${paymentId || 'N/A'}`,
-        `Total Paid: ₹${Number(total).toLocaleString('en-IN')}`,
-        '',
-        `View your orders: ${(process.env.FRONTEND_URL || 'https://apkaai.com').replace(/\/$/, '')}/orders`,
-      ].join('\n'),
-    })
-    console.log(`[Payment] Confirmation email sent to ${userEmail}`)
-    return { ok: true }
-  } catch (err) {
-    console.error('[Payment] Email send failed:', err.code || err.message)
-    return { ok: false, reason: err.code || 'SMTP_SEND_FAILED' }
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

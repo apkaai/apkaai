@@ -18,6 +18,7 @@ const wishlistRouter   = require('./routes/wishlist')
 const reviewsRouter    = require('./routes/reviews')
 const referralRouter   = require('./routes/referral')
 const newsletterRouter = require('./routes/newsletter')
+const invoicesRouter   = require('./routes/invoices')
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -68,6 +69,7 @@ app.use('/api/wishlist',   wishlistRouter)
 app.use('/api/reviews',    reviewsRouter)
 app.use('/api/referral',   referralRouter)
 app.use('/api/newsletter', newsletterRouter)
+app.use('/api/invoices',   invoicesRouter)
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {

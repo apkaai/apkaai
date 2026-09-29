@@ -250,3 +250,37 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_email  ON newsletter_subscribers(email);
 CREATE INDEX IF NOT EXISTS idx_newsletter_status ON newsletter_subscribers(status);
+
+-- ── aws_price_cache ───────────────────────────────────────────────────────────
+-- Caches live AWS pricing API results for 24 hours to avoid hammering the API
+CREATE TABLE IF NOT EXISTS aws_price_cache (
+  cache_key    VARCHAR(200) PRIMARY KEY,  -- e.g. "ec2:t3.medium:ap-south-1:linux"
+  service_code VARCHAR(50)  NOT NULL,     -- AmazonEC2, AmazonRDS, AmazonS3
+  region       VARCHAR(50)  NOT NULL,     -- ap-south-1
+  price_usd    NUMERIC(12,6) NOT NULL,    -- on-demand hourly price in USD
+  unit         VARCHAR(50)  DEFAULT 'Hrs',
+  description  TEXT,
+  raw_json     JSONB,                     -- full AWS response for debugging
+  fetched_at   TIMESTAMPTZ  DEFAULT NOW(),
+  expires_at   TIMESTAMPTZ  DEFAULT NOW() + INTERVAL '24 hours'
+);
+
+CREATE INDEX IF NOT EXISTS idx_price_cache_expires  ON aws_price_cache(expires_at);
+CREATE INDEX IF NOT EXISTS idx_price_cache_service  ON aws_price_cache(service_code, region);
+
+-- ── invoices ──────────────────────────────────────────────────────────────────
+-- Tracks generated PDF invoices uploaded to S3
+CREATE TABLE IF NOT EXISTS invoices (
+  id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id    UUID         UNIQUE NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+  user_id     UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  invoice_no  VARCHAR(50)  NOT NULL,
+  email       VARCHAR(200),
+  amount      NUMERIC(12,2),
+  s3_key      VARCHAR(500),          -- e.g. invoices/2026/INV-XXXXXXXX.pdf
+  email_sent  BOOLEAN      DEFAULT FALSE,
+  created_at  TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_user_id  ON invoices(user_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id);

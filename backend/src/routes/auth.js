@@ -1,9 +1,9 @@
 const express    = require('express')
 const router     = express.Router()
 const crypto     = require('crypto')
-const nodemailer = require('nodemailer')
 const rateLimit  = require('express-rate-limit')
 const { query }  = require('../lib/db')
+const { sendEmail } = require('../services/emailService')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rate limiters — tighter limits on sensitive auth endpoints
@@ -76,33 +76,27 @@ function hashResetToken(rawToken) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email / nodemailer
+// Email — now powered by SES via emailService (SMTP fallback built-in)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Build a fresh transporter each time so env-var changes are picked up.
- * We do NOT cache the transporter singleton — the overhead is minimal and
- * caching prevents credential rotation from taking effect.
+ * Send the password-reset email via SES (or SMTP fallback).
+ * Returns { ok: true } on success or { ok: false, reason: string } on failure.
+ * NEVER throws — callers must handle the result gracefully.
  */
-function buildTransporter() {
-  const host = process.env.SMTP_HOST
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
+async function sendResetEmail(toEmail, resetUrl) {
+  const subject = 'Reset your ApkaAI password'
+  const html    = buildResetEmailHtml(toEmail, resetUrl)
+  const text    = [
+    'Reset your ApkaAI password',
+    '',
+    'We received a request to reset your password.',
+    `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
+    '',
+    "If you didn't request this, ignore this email.",
+  ].join('\n')
 
-  if (!host || !user || !pass) {
-    return null  // SMTP not configured — caller must handle gracefully
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port:   parseInt(process.env.SMTP_PORT   || '587', 10),
-    secure: process.env.SMTP_SECURE          === 'true',
-    auth:   { user, pass },
-    // Reasonable timeouts to prevent hanging requests
-    connectionTimeout: 10000,
-    greetingTimeout:   10000,
-    socketTimeout:     15000,
-  })
+  return sendEmail(toEmail, subject, html, text)
 }
 
 /** Branded HTML reset email */
@@ -168,39 +162,23 @@ function buildResetEmailHtml(toEmail, resetUrl) {
 }
 
 /**
- * Send the password-reset email.
+ * Send the password-reset email via SES (or SMTP fallback).
  * Returns { ok: true } on success or { ok: false, reason: string } on failure.
  * NEVER throws — callers must handle the result gracefully.
  */
 async function sendResetEmail(toEmail, resetUrl) {
-  const transporter = buildTransporter()
-  if (!transporter) {
-    return { ok: false, reason: 'SMTP_NOT_CONFIGURED' }
-  }
+  const subject = 'Reset your ApkaAI password'
+  const html    = buildResetEmailHtml(toEmail, resetUrl)
+  const text    = [
+    'Reset your ApkaAI password',
+    '',
+    'We received a request to reset your password.',
+    `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
+    '',
+    "If you didn't request this, ignore this email.",
+  ].join('\n')
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER
-
-  try {
-    await transporter.sendMail({
-      from:    `"ApkaAI" <${from}>`,
-      to:      toEmail,
-      subject: 'Reset your ApkaAI password',
-      html:    buildResetEmailHtml(toEmail, resetUrl),
-      text:    [
-        'Reset your ApkaAI password',
-        '',
-        'We received a request to reset your password.',
-        `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
-        '',
-        "If you didn't request this, ignore this email.",
-      ].join('\n'),
-    })
-    return { ok: true }
-  } catch (err) {
-    // Log the SMTP error but NOT the reset URL or raw token
-    console.error('[Auth] SMTP send failed:', err.code || err.message)
-    return { ok: false, reason: err.code || 'SMTP_SEND_FAILED' }
-  }
+  return sendEmail(toEmail, subject, html, text)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
