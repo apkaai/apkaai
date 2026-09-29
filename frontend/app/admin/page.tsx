@@ -4,11 +4,138 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
-  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight, Zap, ExternalLink, Activity
+  TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight,
+  ShoppingBag, Package, CheckCircle, XCircle, Clock, RotateCcw,
+  IndianRupee, ChevronDown, ChevronUp, ExternalLink
 } from 'lucide-react'
 
-interface User   { user_id: string; name: string; email: string; role: string; created_at: string }
+interface User    { user_id: string; name: string; email: string; role: string; created_at: string }
 interface Contact { id: string; name: string; email: string; subject: string; message: string; status: string; created_at: string }
+
+type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled' | 'refunded'
+
+interface OrderItem {
+  id: string; tool_name: string; tool_logo: string; plan_name: string
+  plan_price: string; billing_cycle: string; quantity: number
+}
+interface AdminOrder {
+  order_id: string; user_name: string; user_email: string; status: OrderStatus
+  subtotal: number; discount: number; tax: number; total: number
+  coupon_code: string | null; created_at: string; items: OrderItem[]
+}
+interface OrderStats {
+  total_orders: string; confirmed: string; completed: string
+  cancelled: string; total_revenue: string
+}
+
+const ORDER_STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; icon: React.ReactNode }> = {
+  pending:    { label: 'Pending',    color: 'bg-yellow-900/30 text-yellow-400 border-yellow-700/40',    icon: <Clock className="w-3 h-3" /> },
+  confirmed:  { label: 'Confirmed',  color: 'bg-blue-900/30 text-blue-400 border-blue-700/40',          icon: <CheckCircle className="w-3 h-3" /> },
+  processing: { label: 'Processing', color: 'bg-purple-900/30 text-purple-400 border-purple-700/40',    icon: <RefreshCw className="w-3 h-3" /> },
+  completed:  { label: 'Completed',  color: 'bg-emerald-900/30 text-emerald-400 border-emerald-700/40', icon: <CheckCircle className="w-3 h-3" /> },
+  cancelled:  { label: 'Cancelled',  color: 'bg-red-900/30 text-red-400 border-red-700/40',             icon: <XCircle className="w-3 h-3" /> },
+  refunded:   { label: 'Refunded',   color: 'bg-slate-700/30 text-slate-400 border-slate-600/40',       icon: <RotateCcw className="w-3 h-3" /> },
+}
+
+function AdminOrderRow({ order, token, onStatusChange }: {
+  order: AdminOrder
+  token: string
+  onStatusChange: (id: string, status: OrderStatus) => void
+}) {
+  const [expanded, setExpanded]   = useState(false)
+  const [updating, setUpdating]   = useState(false)
+  const cfg = ORDER_STATUS_CONFIG[order.status] || ORDER_STATUS_CONFIG.pending
+
+  async function updateStatus(newStatus: OrderStatus) {
+    setUpdating(true)
+    try {
+      const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
+      const res = await fetch(`${API}/orders/${order.order_id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok) onStatusChange(order.order_id, newStatus)
+    } catch {}
+    setUpdating(false)
+  }
+
+  return (
+    <div className="border-b border-purple-900/20 last:border-0">
+      {/* Main row */}
+      <button
+        onClick={() => setExpanded(p => !p)}
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-purple-950/10 transition-colors text-left"
+      >
+        <div className="w-9 h-9 rounded-xl bg-purple-900/40 flex items-center justify-center flex-shrink-0">
+          <Package className="w-4 h-4 text-purple-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-semibold">
+            <span className="font-mono text-purple-300">#{order.order_id.slice(0,8).toUpperCase()}</span>
+            <span className="text-slate-400 font-normal ml-2">by {order.user_name}</span>
+          </p>
+          <p className="text-slate-500 text-xs mt-0.5">{order.user_email} · {new Date(order.created_at).toLocaleString('en-IN')}</p>
+        </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-purple-300 font-bold text-sm hidden sm:block">₹{Number(order.total).toLocaleString('en-IN')}</span>
+          <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${cfg.color}`}>
+            {cfg.icon} {cfg.label}
+          </span>
+          {expanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div className="px-5 pb-5 bg-purple-950/5">
+          {/* Items */}
+          <div className="space-y-2 mb-4">
+            {order.items.map(item => (
+              <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl bg-[#0F0A1E] border border-purple-900/30">
+                <span className="text-xl flex-shrink-0">{item.tool_logo}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium">{item.tool_name}</p>
+                  <p className="text-slate-400 text-xs capitalize">{item.plan_name} Plan · {item.billing_cycle}</p>
+                </div>
+                <p className="text-purple-300 font-bold text-sm flex-shrink-0">{item.plan_price}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Price summary + status update */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="text-sm space-y-1">
+              <div className="flex gap-4 text-slate-400">
+                <span>Subtotal: <span className="text-white">₹{Number(order.subtotal).toLocaleString('en-IN')}</span></span>
+                {Number(order.discount) > 0 && <span className="text-emerald-400">Discount: −₹{Number(order.discount).toLocaleString('en-IN')}</span>}
+                <span>GST: <span className="text-white">₹{Number(order.tax).toLocaleString('en-IN')}</span></span>
+              </div>
+              <div className="text-white font-bold">Total: <span className="text-purple-300">₹{Number(order.total).toLocaleString('en-IN')}</span></div>
+              {order.coupon_code && <div className="text-emerald-400 text-xs">Coupon: {order.coupon_code}</div>}
+            </div>
+
+            {/* Status control */}
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 text-xs">Update status:</span>
+              <select
+                value={order.status}
+                onChange={e => updateStatus(e.target.value as OrderStatus)}
+                disabled={updating}
+                className="bg-purple-950/40 border border-purple-800/40 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 disabled:opacity-50"
+              >
+                {Object.keys(ORDER_STATUS_CONFIG).map(s => (
+                  <option key={s} value={s}>{ORDER_STATUS_CONFIG[s as OrderStatus].label}</option>
+                ))}
+              </select>
+              {updating && <RefreshCw className="w-4 h-4 text-purple-400 animate-spin" />}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -39,15 +166,22 @@ function signOut() {
 }
 
 export default function AdminDashboard() {
-  const [tab, setTab]         = useState<'overview'|'users'|'contacts'|'datalake'>('overview')
+  const [tab, setTab]         = useState<'overview'|'users'|'contacts'|'orders'|'datalake'>('overview')
   const [users, setUsers]     = useState<User[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
+  const [orders, setOrders]   = useState<AdminOrder[]>([])
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null)
+  const [orderSearch, setOrderSearch] = useState('')
+  const [orderStatusFilter, setOrderStatusFilter] = useState('')
+  const [ordersLoading, setOrdersLoading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [search, setSearch]   = useState('')
   const [driveFiles, setDriveFiles] = useState<{ name: string; type: string; modified: string; size: string; link: string }[]>([])
   const [driveLoading, setDriveLoading] = useState(false)
+  const [newsletterCount, setNewsletterCount] = useState(0)
 
-  const token = typeof window !== 'undefined' ? (localStorage.getItem('apkaai_token') || sessionStorage.getItem('apkaai_token')) : ''
+  const token = typeof window !== 'undefined' ? (localStorage.getItem('apkaai_token') || sessionStorage.getItem('apkaai_token') || '') : ''
+  const API   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
 
   const fetchUsers = async () => {
     setLoading(true)
@@ -55,6 +189,12 @@ export default function AdminDashboard() {
       const r = await fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } })
       const d = await r.json()
       setUsers(d.users || [])
+    } catch {}
+    // Also fetch newsletter subscriber count
+    try {
+      const r = await fetch('/api/newsletter/subscribers', { headers: { Authorization: `Bearer ${token}` } })
+      const d = await r.json()
+      setNewsletterCount(d.active || 0)
     } catch {}
     setLoading(false)
   }
@@ -79,9 +219,28 @@ export default function AdminDashboard() {
     setDriveLoading(false)
   }
 
+  const fetchOrders = async () => {
+    setOrdersLoading(true)
+    try {
+      const params = new URLSearchParams({ page: '1', limit: '50' })
+      if (orderStatusFilter) params.set('status', orderStatusFilter)
+      if (orderSearch)       params.set('search', orderSearch)
+      const r = await fetch(`${API}/orders?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      const d = await r.json()
+      setOrders(d.orders || [])
+      setOrderStats(d.stats || null)
+    } catch {}
+    setOrdersLoading(false)
+  }
+
+  const handleOrderStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    setOrders(prev => prev.map(o => o.order_id === orderId ? { ...o, status: newStatus } : o))
+  }
+
   useEffect(() => {
     if (tab === 'users' || tab === 'overview') fetchUsers()
     if (tab === 'contacts') fetchContacts()
+    if (tab === 'orders') fetchOrders()
     if (tab === 'datalake') { fetchUsers(); fetchContacts(); fetchDriveFiles() }
   }, [tab])
 
@@ -97,12 +256,11 @@ export default function AdminDashboard() {
   }
 
   const tabs = [
-    { id: 'overview',    label: 'Overview',    icon: BarChart3  },
-    { id: 'users',       label: 'Users',       icon: Users      },
-    { id: 'contacts',    label: 'Contacts',    icon: Mail       },
-    { id: 'datalake',    label: 'Data Lake',   icon: Database   },
-    { id: 'monitoring',  label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring' } as const,
-    { id: 'grafana',     label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' } as const,
+    { id: 'overview', label: 'Overview',  icon: BarChart3 },
+    { id: 'users',    label: 'Users',     icon: Users },
+    { id: 'contacts', label: 'Contacts',  icon: Mail },
+    { id: 'orders',   label: 'Orders',    icon: ShoppingBag },
+    { id: 'datalake', label: 'Data Lake', icon: Database },
   ] as const
 
   return (
@@ -163,10 +321,10 @@ export default function AdminDashboard() {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Users',     value: users.length,                              icon: Users,      color: 'text-purple-400' },
-                  { label: 'Contacts Recv.',  value: contacts.length,                           icon: Mail,       color: 'text-blue-400' },
-                  { label: 'AI Tools',        value: 43,                                        icon: BarChart3,  color: 'text-emerald-400' },
-                  { label: 'Drive Files',     value: driveFiles.length,                         icon: Database,   color: 'text-amber-400' },
+                  { label: 'Total Users',    value: users.length,                      icon: Users,       color: 'text-purple-400' },
+                  { label: 'Contacts Recv.', value: contacts.length,                   icon: Mail,        color: 'text-blue-400' },
+                  { label: 'Total Orders',   value: orderStats ? parseInt(orderStats.total_orders) : orders.length, icon: ShoppingBag, color: 'text-emerald-400' },
+                  { label: 'Newsletter Subs', value: newsletterCount,                  icon: IndianRupee, color: 'text-amber-400' },
                 ].map(s => (
                   <div key={s.label} className="glow-border rounded-xl p-5 bg-[#0F0A1E]">
                     <s.icon className={`w-5 h-5 ${s.color} mb-2`} />
@@ -323,6 +481,119 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── ORDERS ────────────────────────────────────────────────── */}
+          {tab === 'orders' && (
+            <div className="space-y-5">
+              {/* Stats row */}
+              {orderStats && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Total Orders',  value: parseInt(orderStats.total_orders),                          color: 'text-purple-400', icon: <Package className="w-5 h-5" /> },
+                    { label: 'Confirmed',     value: parseInt(orderStats.confirmed),                             color: 'text-blue-400',   icon: <CheckCircle className="w-5 h-5" /> },
+                    { label: 'Completed',     value: parseInt(orderStats.completed),                             color: 'text-emerald-400',icon: <CheckCircle className="w-5 h-5" /> },
+                    { label: 'Total Revenue', value: `₹${Number(orderStats.total_revenue).toLocaleString('en-IN')}`, color: 'text-amber-400',  icon: <IndianRupee className="w-5 h-5" /> },
+                  ].map(s => (
+                    <div key={s.label} className="glow-border rounded-xl p-5 bg-[#0F0A1E]">
+                      <div className={`${s.color} mb-2`}>{s.icon}</div>
+                      <div className="text-2xl font-extrabold text-white">{s.value}</div>
+                      <div className="text-slate-400 text-sm mt-0.5">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Orders table */}
+              <div className="glow-border rounded-2xl bg-[#0F0A1E] overflow-hidden">
+                {/* Toolbar */}
+                <div className="flex items-center justify-between p-5 border-b border-purple-900/30 flex-wrap gap-3">
+                  <h2 className="font-bold text-white flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5 text-purple-400" />
+                    All Orders ({orders.length})
+                  </h2>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Search */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                      <input
+                        value={orderSearch}
+                        onChange={e => setOrderSearch(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && fetchOrders()}
+                        placeholder="Search by name / email..."
+                        className="bg-purple-950/40 border border-purple-800/40 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 w-52"
+                      />
+                    </div>
+                    {/* Status filter */}
+                    <select
+                      value={orderStatusFilter}
+                      onChange={e => { setOrderStatusFilter(e.target.value) }}
+                      className="bg-purple-950/40 border border-purple-800/40 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="">All Statuses</option>
+                      {Object.entries(ORDER_STATUS_CONFIG).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                      ))}
+                    </select>
+                    {/* Refresh */}
+                    <button
+                      onClick={fetchOrders}
+                      disabled={ordersLoading}
+                      className="p-2 text-slate-400 hover:text-white border border-purple-800/40 rounded-lg hover:border-purple-500 transition-all"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${ordersLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                    {/* Export */}
+                    <button
+                      onClick={() => exportCSV(
+                        orders.map(o => ({
+                          order_id:   o.order_id,
+                          user:       o.user_name,
+                          email:      o.user_email,
+                          status:     o.status,
+                          total:      o.total,
+                          items:      o.items.length,
+                          date:       o.created_at,
+                        })),
+                        'apkaai-orders.csv'
+                      )}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition-all"
+                    >
+                      <Download className="w-4 h-4" /> Export
+                    </button>
+                  </div>
+                </div>
+
+                {/* Loading */}
+                {ordersLoading && (
+                  <div className="py-12 text-center text-slate-500 flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Loading orders...
+                  </div>
+                )}
+
+                {/* Empty */}
+                {!ordersLoading && orders.length === 0 && (
+                  <div className="py-12 text-center">
+                    <ShoppingBag className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-400">No orders found</p>
+                  </div>
+                )}
+
+                {/* Order rows */}
+                {!ordersLoading && orders.length > 0 && (
+                  <div>
+                    {orders.map(order => (
+                      <AdminOrderRow
+                        key={order.order_id}
+                        order={order}
+                        token={token}
+                        onStatusChange={handleOrderStatusChange}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { Star, ArrowRight } from 'lucide-react'
 import type { AITool } from '@/lib/tools-data'
 import AddToCartButton from '@/components/cart/AddToCartButton'
+import WishlistButton from '@/components/wishlist/WishlistButton'
 
 interface ToolCardProps {
   tool: AITool
@@ -50,6 +51,10 @@ export default function ToolCard({ tool, compact = false, noLink = false }: Tool
               {tool.name}
             </h3>
             <p className="text-slate-400 text-xs truncate mt-0.5">{tool.tagline}</p>
+          </div>
+          {/* Wishlist heart — stops link navigation */}
+          <div onClick={e => e.preventDefault()}>
+            <WishlistButton tool={tool} size="sm" />
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { User, Mail, Calendar, Shield, LogOut, ArrowRight, Zap } from 'lucide-react'
+import { User, Mail, Calendar, Shield, LogOut, ArrowRight, Zap, ShoppingBag, Heart, LayoutDashboard, Gift } from 'lucide-react'
 
 interface UserData { userId: string; name: string; email: string; role: string; created_at?: string }
 
@@ -76,15 +76,35 @@ export default function ProfilePage() {
 
         {/* Quick links */}
         <div className="grid grid-cols-2 gap-4 mb-6">
+          <Link href="/dashboard" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group col-span-2">
+            <LayoutDashboard className="w-6 h-6 text-purple-400 mb-2" />
+            <p className="text-white font-semibold text-sm">My Dashboard</p>
+            <p className="text-slate-400 text-xs mt-0.5">Orders, spending, wishlist and activity at a glance</p>
+          </Link>
           <Link href="/tools" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group">
             <Zap className="w-6 h-6 text-purple-400 mb-2" />
             <p className="text-white font-semibold text-sm">Browse AI Tools</p>
-            <p className="text-slate-400 text-xs mt-0.5">70 tools curated</p>
+            <p className="text-slate-400 text-xs mt-0.5">100+ tools curated</p>
           </Link>
           <Link href="/compare" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group">
             <ArrowRight className="w-6 h-6 text-purple-400 mb-2" />
             <p className="text-white font-semibold text-sm">Compare Tools</p>
             <p className="text-slate-400 text-xs mt-0.5">Side by side</p>
+          </Link>
+          <Link href="/orders" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group col-span-2">
+            <ShoppingBag className="w-6 h-6 text-purple-400 mb-2" />
+            <p className="text-white font-semibold text-sm">Order History</p>
+            <p className="text-slate-400 text-xs mt-0.5">View all your past orders and subscriptions</p>
+          </Link>
+          <Link href="/wishlist" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group">
+            <Heart className="w-6 h-6 text-red-400 mb-2" />
+            <p className="text-white font-semibold text-sm">My Wishlist</p>
+            <p className="text-slate-400 text-xs mt-0.5">AI tools you&apos;ve saved for later</p>
+          </Link>
+          <Link href="/referral" className="glow-border rounded-xl p-5 bg-[#0F0A1E] hover:bg-purple-950/20 transition-all group">
+            <Gift className="w-6 h-6 text-amber-400 mb-2" />
+            <p className="text-white font-semibold text-sm">Refer & Earn</p>
+            <p className="text-slate-400 text-xs mt-0.5">Share link, both get 10% off</p>
           </Link>
           {user.role === 'admin' && (
             <Link href="/admin" className="glow-border rounded-xl p-5 bg-purple-900/20 border-purple-600/40 hover:bg-purple-900/30 transition-all col-span-2">

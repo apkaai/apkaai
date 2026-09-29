@@ -169,16 +169,7 @@ export default function PlansPage() {
             </p>
           </div>
 
-          {/* Access required banner */}
-          {accessBanner && (
-            <div className="mb-6 glow-border rounded-xl p-4 bg-amber-900/20 border-amber-700/40 flex items-start gap-3">
-              <span className="text-2xl flex-shrink-0">🔒</span>
-              <div>
-                <p className="text-amber-300 font-bold text-sm">Active Plan Required</p>
-                <p className="text-amber-400/80 text-xs mt-0.5">Choose a plan below to unlock full access to all 43+ AI tools — deals, comparisons, and direct tool links.</p>
-              </div>
-            </div>
-          )}
+          {/* Access required banner — removed (no subscription gate in ApkaAI) */}
 
           {/* Billing toggle */}
           <div className="flex items-center justify-center gap-4 mb-12">

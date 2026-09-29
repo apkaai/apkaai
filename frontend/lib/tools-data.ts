@@ -38,20 +38,20 @@ export interface Category {
 }
 
 export const categories: Category[] = [
-  { id: '1',  name: 'AI Chat & Research',       slug: 'ai-chat',          emoji: '💬', description: 'Conversational AI and research assistants', count: 8 },
-  { id: '2',  name: 'Writing & Content',         slug: 'writing',          emoji: '✍️', description: 'AI-powered writing and content creation',   count: 6 },
-  { id: '3',  name: 'Image Generation',          slug: 'image-generation', emoji: '🎨', description: 'Create stunning visuals with AI',            count: 6 },
-  { id: '4',  name: 'Video Generation',          slug: 'video-generation', emoji: '🎬', description: 'Generate and edit videos with AI',           count: 6 },
-  { id: '5',  name: 'Music & Audio',             slug: 'music-audio',      emoji: '🎵', description: 'AI music composition and audio tools',       count: 4 },
-  { id: '6',  name: 'Coding',                    slug: 'coding',           emoji: '💻', description: 'AI-powered coding assistants',               count: 6 },
+  { id: '1',  name: 'AI Chat & Research',       slug: 'ai-chat',          emoji: '💬', description: 'Conversational AI and research assistants', count: 12 },
+  { id: '2',  name: 'Writing & Content',         slug: 'writing',          emoji: '✍️', description: 'AI-powered writing and content creation',   count: 10 },
+  { id: '3',  name: 'Image Generation',          slug: 'image-generation', emoji: '🎨', description: 'Create stunning visuals with AI',            count: 9 },
+  { id: '4',  name: 'Video Generation',          slug: 'video-generation', emoji: '🎬', description: 'Generate and edit videos with AI',           count: 10 },
+  { id: '5',  name: 'Music & Audio',             slug: 'music-audio',      emoji: '🎵', description: 'AI music composition and audio tools',       count: 7 },
+  { id: '6',  name: 'Coding',                    slug: 'coding',           emoji: '💻', description: 'AI-powered coding assistants',               count: 8 },
   { id: '7',  name: 'Presentations',             slug: 'presentations',    emoji: '📊', description: 'Create beautiful presentations with AI',     count: 4 },
-  { id: '8',  name: 'Research & Productivity',   slug: 'research',         emoji: '📚', description: 'AI research and productivity tools',         count: 4 },
-  { id: '9',  name: 'Design',                    slug: 'design',           emoji: '🖼️', description: 'AI design and creative tools',              count: 4 },
-  { id: '10', name: 'Voice & Avatars',           slug: 'voice-avatars',    emoji: '🗣️', description: 'AI voice cloning and avatar creation',      count: 4 },
-  { id: '11', name: 'Automation',                slug: 'automation',       emoji: '🤖', description: 'AI workflow automation tools',               count: 4 },
-  { id: '12', name: 'Business & Marketing',      slug: 'business',         emoji: '📈', description: 'AI tools for business and marketing',        count: 4 },
-  { id: '13', name: 'Meetings & Transcription',  slug: 'meetings',         emoji: '📝', description: 'AI meeting assistants and transcription',    count: 4 },
-  { id: '14', name: 'Learning',                  slug: 'learning',         emoji: '🧠', description: 'AI-powered learning platforms',              count: 4 },
+  { id: '8',  name: 'Research & Productivity',   slug: 'research',         emoji: '📚', description: 'AI research and productivity tools',         count: 6 },
+  { id: '9',  name: 'Design',                    slug: 'design',           emoji: '🖼️', description: 'AI design and creative tools',              count: 6 },
+  { id: '10', name: 'Voice & Avatars',           slug: 'voice-avatars',    emoji: '🗣️', description: 'AI voice cloning and avatar creation',      count: 6 },
+  { id: '11', name: 'Automation',                slug: 'automation',       emoji: '🤖', description: 'AI workflow automation tools',               count: 7 },
+  { id: '12', name: 'Business & Marketing',      slug: 'business',         emoji: '📈', description: 'AI tools for business and marketing',        count: 8 },
+  { id: '13', name: 'Meetings & Transcription',  slug: 'meetings',         emoji: '📝', description: 'AI meeting assistants and transcription',    count: 5 },
+  { id: '14', name: 'Learning',                  slug: 'learning',         emoji: '🧠', description: 'AI-powered learning platforms',              count: 5 },
   { id: '15', name: 'AI Search',                 slug: 'ai-search',        emoji: '🔍', description: 'Next-gen AI search engines',                 count: 4 },
   { id: '16', name: 'Backup & Data Protection',  slug: 'backup-protection',emoji: '🔄', description: 'Enterprise backup, recovery & data management', count: 7 },
 ]
@@ -222,11 +222,11 @@ export const tools: AITool[] = [
     tagline: 'Agentic coding by Anthropic in terminal',
     description: "Claude Code is Anthropic's terminal-based agentic coding tool. It reads your entire codebase, writes, tests, and commits code autonomously with deep context understanding.",
     category: 'Coding', categorySlug: 'coding', logo: '🖥️',
-    website: 'https://docs.anthropic.com/claude-code', pricing: 'Paid', startingPrice: 'Usage-based', monthlyPrice: 1650,
+    website: 'https://docs.anthropic.com/claude-code', pricing: 'Paid', startingPrice: '₹250/MTok', monthlyPrice: 1650,
     rating: 4.7, reviews: 21000, tags: ['Terminal', 'Agentic', 'Anthropic', 'Git', 'Full-codebase'],
     featured: false, new: true,
     pricingPlans: [
-      { name: 'API Usage', price: '$3/MTok input', monthly: 1650, features: ['Claude 3.5 Sonnet', 'Full codebase context', 'Git integration', 'Multi-file edits'], popular: true },
+      { name: 'API Usage', price: '₹250/MTok input', monthly: 1650, features: ['Claude 3.5 Sonnet', 'Full codebase context', 'Git integration', 'Multi-file edits'], popular: true },
     ]
   },
   {
@@ -1102,6 +1102,418 @@ const freeTrialTools: AITool[] = [
     ]
   },
 ]
+
+// ── Additional Tools (expanding catalog to 100+) ───────────────────────────────
+const additionalTools: AITool[] = [
+  // ── AI Chat & Research ──────────────────────────────────────────────────────
+  {
+    id: 'a1', name: 'Grok', slug: 'grok',
+    tagline: "xAI's witty and real-time AI assistant",
+    description: "Grok by xAI (Elon Musk) is an AI assistant with real-time access to X/Twitter data. Known for its wit, directness, and willingness to answer edgy questions other AIs avoid.",
+    category: 'AI Chat & Research', categorySlug: 'ai-chat', logo: '✖️',
+    website: 'https://x.ai/grok', pricing: 'Freemium', startingPrice: '₹830/mo', monthlyPrice: 830,
+    rating: 4.3, reviews: 41000, tags: ['Real-time', 'Twitter', 'xAI', 'Wit', 'Current Events'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free (X basic)', price: '₹0/mo', monthly: 0, features: ['Limited Grok access', 'Basic queries', 'X integration'] },
+      { name: 'X Premium', price: '₹830/mo', monthly: 830, features: ['Full Grok access', 'Real-time data', 'Image generation', 'Priority'], popular: true },
+    ]
+  },
+  {
+    id: 'a2', name: 'Meta AI', slug: 'meta-ai',
+    tagline: "Meta's free AI assistant across all apps",
+    description: "Meta AI powered by Llama 4 is built into WhatsApp, Instagram, Facebook, and Messenger. Completely free — chat, generate images, get answers without switching apps.",
+    category: 'AI Chat & Research', categorySlug: 'ai-chat', logo: '💠',
+    website: 'https://meta.ai', pricing: 'Free', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.2, reviews: 58000, tags: ['Free', 'WhatsApp', 'Instagram', 'Meta', 'Llama 4'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Unlimited chat', 'Image generation', 'WhatsApp/Instagram', 'Web search'], popular: true },
+    ]
+  },
+  {
+    id: 'a3', name: 'Mistral AI', slug: 'mistral-ai',
+    tagline: 'European open-weight AI — fast and powerful',
+    description: 'Mistral AI offers frontier open-weight models (Mistral Large, Mixtral) known for speed and efficiency. Privacy-focused, European-built, with competitive performance vs GPT-4.',
+    category: 'AI Chat & Research', categorySlug: 'ai-chat', logo: '🌊',
+    website: 'https://mistral.ai', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 28000, tags: ['Open Source', 'European', 'Fast', 'Privacy', 'API'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free (Le Chat)', price: '₹0/mo', monthly: 0, features: ['Mistral Large 2', 'Web search', 'Image generation', 'Unlimited'] },
+      { name: 'Pro', price: '₹1,250/mo', monthly: 1250, features: ['All models', 'API access', 'Higher limits', 'Priority'], popular: true },
+    ]
+  },
+  // ── Coding ──────────────────────────────────────────────────────────────────
+  {
+    id: 'a4', name: 'Bolt.new', slug: 'bolt-new',
+    tagline: 'Build full-stack apps with AI in the browser',
+    description: 'Bolt.new by StackBlitz lets you prompt, run, edit, and deploy full-stack applications entirely in the browser. No local setup required — powered by Claude and WebContainers.',
+    category: 'Coding', categorySlug: 'coding', logo: '⚡',
+    website: 'https://bolt.new', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.6, reviews: 31000, tags: ['Full-stack', 'Browser-based', 'Claude', 'Deploy', 'No Setup'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['150K tokens/day', 'All frameworks', 'Deploy to Netlify', 'WebContainers'] },
+      { name: 'Pro', price: '₹1,660/mo', monthly: 1660, features: ['10M tokens/mo', 'Private projects', 'Priority support', 'Custom domains'], popular: true },
+    ]
+  },
+  {
+    id: 'a5', name: 'Lovable', slug: 'lovable',
+    tagline: 'Build and deploy web apps by chatting with AI',
+    description: 'Lovable (formerly GPT Engineer) generates full React applications from descriptions. Connect to Supabase for a backend, deploy with one click — no coding required.',
+    category: 'Coding', categorySlug: 'coding', logo: '💜',
+    website: 'https://lovable.dev', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.5, reviews: 18000, tags: ['React', 'No-Code', 'Supabase', 'Deploy', 'Chat-to-App'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['5 monthly credits', 'Public projects', 'GitHub export', 'Community support'] },
+      { name: 'Starter', price: '₹1,660/mo', monthly: 1660, features: ['30 credits/mo', 'Private projects', 'Custom domains', 'Supabase integration'], popular: true },
+    ]
+  },
+  // ── Image Generation ────────────────────────────────────────────────────────
+  {
+    id: 'a6', name: 'Flux AI', slug: 'flux-ai',
+    tagline: 'State-of-the-art open image generation',
+    description: 'FLUX.1 by Black Forest Labs is the leading open-source image model, surpassing Midjourney v6 in prompt adherence and photorealism. Available via API and ComfyUI.',
+    category: 'Image Generation', categorySlug: 'image-generation', logo: '🌌',
+    website: 'https://blackforestlabs.ai', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.7, reviews: 22000, tags: ['Open Source', 'Photorealism', 'API', 'ComfyUI', 'State-of-art'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free (via Fal.ai)', price: '₹0', monthly: 0, features: ['FLUX.1 Schnell', 'Fast generation', 'Basic quality', 'Community use'] },
+      { name: 'API Pro', price: '₹830/mo', monthly: 830, features: ['FLUX.1 Pro', 'Highest quality', 'Commercial use', 'API access'], popular: true },
+    ]
+  },
+  {
+    id: 'a7', name: 'Canva Text to Image', slug: 'canva-text-to-image',
+    tagline: 'AI image generation inside Canva',
+    description: "Canva's Text to Image feature generates custom AI images directly inside the design editor. Supports multiple styles and seamlessly integrates with your Canva designs.",
+    category: 'Image Generation', categorySlug: 'image-generation', logo: '🖌️',
+    website: 'https://canva.com/features/ai-image-generator', pricing: 'Freemium', startingPrice: '₹415/mo', monthlyPrice: 415,
+    rating: 4.3, reviews: 67000, tags: ['Design Integration', 'Multiple Styles', 'Easy Use', 'Canva', 'No Separate App'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['50 AI generations/mo', 'Basic styles', 'Within Canva editor'] },
+      { name: 'Pro', price: '₹415/mo', monthly: 415, features: ['500 AI images/mo', 'All styles', 'Commercial license', 'Brand kit'], popular: true },
+    ]
+  },
+  // ── Voice & Avatars ─────────────────────────────────────────────────────────
+  {
+    id: 'a8', name: 'Murf AI', slug: 'murf-ai',
+    tagline: 'Studio-quality AI voices for content creators',
+    description: 'Murf AI provides 120+ AI voices across 20 languages for creating voiceovers, podcasts, e-learning content, and explainer videos. Includes a studio editor with music sync.',
+    category: 'Voice & Avatars', categorySlug: 'voice-avatars', logo: '🎤',
+    website: 'https://murf.ai', pricing: 'Freemium', startingPrice: '₹830/mo', monthlyPrice: 830,
+    rating: 4.5, reviews: 35000, tags: ['Voiceover', 'E-learning', 'Podcast', '120+ Voices', 'Studio Editor'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['10 min voice gen/mo', '120+ voices', 'No downloads', 'Watermark'] },
+      { name: 'Basic', price: '₹830/mo', monthly: 830, features: ['2hr voice gen/mo', 'All voices', 'Commercial use', 'Downloads'], popular: true },
+      { name: 'Pro', price: '₹2,490/mo', monthly: 2490, features: ['9hr voice gen/mo', 'Custom voice', 'API', 'Team sharing'] },
+    ]
+  },
+  {
+    id: 'a9', name: 'Descript', slug: 'descript',
+    tagline: 'Edit video and audio like a text document',
+    description: 'Descript uses AI to transcribe your video/audio and let you edit it like a Word doc. Delete words to remove them, overdub to fix mistakes, and generate AI voiceovers.',
+    category: 'Voice & Avatars', categorySlug: 'voice-avatars', logo: '🎞️',
+    website: 'https://descript.com', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.6, reviews: 28000, tags: ['Video Editing', 'Transcription', 'Overdub', 'Podcast', 'Screen Record'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['1hr transcription/mo', 'Basic editing', '720p export', 'Watermark'] },
+      { name: 'Hobbyist', price: '₹830/mo', monthly: 830, features: ['10hr transcription/mo', 'Overdub', '4K export', 'No watermark'], popular: true },
+    ]
+  },
+  // ── Research & Productivity ─────────────────────────────────────────────────
+  {
+    id: 'a10', name: 'Consensus', slug: 'consensus',
+    tagline: 'AI search engine for scientific papers',
+    description: 'Consensus searches 200M+ scientific papers and uses AI to extract findings. Get evidence-based answers with citations directly from peer-reviewed research.',
+    category: 'Research & Productivity', categorySlug: 'research', logo: '🔬',
+    website: 'https://consensus.app', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.6, reviews: 21000, tags: ['Science', 'Research', 'Papers', 'Evidence-based', 'Citations'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['20 searches/mo', 'Basic insights', 'Paper links'] },
+      { name: 'Premium', price: '₹830/mo', monthly: 830, features: ['Unlimited searches', 'Consensus Meter', 'GPT-4 synthesis', 'Export'], popular: true },
+    ]
+  },
+  {
+    id: 'a11', name: 'Mem AI', slug: 'mem-ai',
+    tagline: 'Self-organizing AI workspace for notes',
+    description: 'Mem uses AI to automatically organize your notes, surface relevant information, and answer questions from your knowledge base — no folders or tags needed.',
+    category: 'Research & Productivity', categorySlug: 'research', logo: '🧠',
+    website: 'https://mem.ai', pricing: 'Paid', startingPrice: '₹1,250/mo', monthlyPrice: 1250,
+    rating: 4.3, reviews: 14000, tags: ['Notes', 'AI Organization', 'Knowledge Base', 'Self-organizing', 'Q&A'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Mem', price: '₹1,250/mo', monthly: 1250, features: ['Unlimited notes', 'AI organization', 'Smart search', 'Q&A from notes'], popular: true },
+    ]
+  },
+  // ── Design ──────────────────────────────────────────────────────────────────
+  {
+    id: 'a12', name: 'Khroma', slug: 'khroma',
+    tagline: 'AI colour palette generator for designers',
+    description: 'Khroma uses AI trained on designer colour preferences to generate, search, and save colour palettes. Perfect for finding on-brand colour combinations quickly.',
+    category: 'Design', categorySlug: 'design', logo: '🎨',
+    website: 'https://khroma.co', pricing: 'Free', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 18000, tags: ['Colour', 'Palette', 'Design', 'Branding', 'Free'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Unlimited palettes', 'AI colour matching', 'Typography preview', 'Gradient generation'], popular: true },
+    ]
+  },
+  {
+    id: 'a13', name: 'Uizard', slug: 'uizard',
+    tagline: 'Turn sketches and screenshots into UI mockups',
+    description: 'Uizard converts hand-drawn sketches and screenshots into editable UI mockups using AI. Design mobile apps, web apps, and dashboards 10x faster with AI-generated screens.',
+    category: 'Design', categorySlug: 'design', logo: '📱',
+    website: 'https://uizard.io', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 22000, tags: ['Wireframe', 'Sketch-to-UI', 'Prototype', 'Mobile', 'Rapid Design'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['3 projects', '2 screens/project', 'Basic templates', 'PNG export'] },
+      { name: 'Pro', price: '₹1,250/mo', monthly: 1250, features: ['Unlimited projects', 'AI generation', 'Component library', 'PDF/HTML export'], popular: true },
+    ]
+  },
+  // ── Meetings & Transcription ─────────────────────────────────────────────────
+  {
+    id: 'a14', name: 'Tldv', slug: 'tldv',
+    tagline: 'Record and summarize any online meeting free',
+    description: 'tl;dv records Zoom and Google Meet calls and uses GPT to create timestamped summaries and transcripts. Share meeting highlights with one click — free forever.',
+    category: 'Meetings & Transcription', categorySlug: 'meetings', logo: '📹',
+    website: 'https://tldv.io', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.6, reviews: 32000, tags: ['Meeting Recording', 'Summaries', 'Zoom', 'Google Meet', 'Free'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Unlimited recordings', 'AI summaries', 'Clip sharing', 'CRM sync basic'] },
+      { name: 'Pro', price: '₹1,250/mo', monthly: 1250, features: ['Speaker tracking', 'Custom templates', 'CRM integration', 'Analytics'], popular: true },
+    ]
+  },
+  // ── Business & Marketing ─────────────────────────────────────────────────────
+  {
+    id: 'a15', name: 'Predis AI', slug: 'predis-ai',
+    tagline: 'AI social media content creator and scheduler',
+    description: 'Predis AI generates social media posts, carousels, videos, and reels from a single prompt. Schedule across Instagram, LinkedIn, Facebook, and TikTok with one click.',
+    category: 'Business & Marketing', categorySlug: 'business', logo: '📲',
+    website: 'https://predis.ai', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 19000, tags: ['Social Media', 'Instagram', 'Reel', 'Carousel', 'Schedule'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['15 posts/mo', 'Basic templates', '1 brand', 'AI captions'] },
+      { name: 'Solo', price: '₹830/mo', monthly: 830, features: ['Unlimited posts', 'Video/Reel gen', 'Scheduling', 'Analytics'], popular: true },
+    ]
+  },
+  {
+    id: 'a16', name: 'Surfer SEO', slug: 'surfer-seo',
+    tagline: 'AI-powered SEO content optimisation',
+    description: 'Surfer SEO analyses top-ranking pages and guides you to create SEO-optimized content. The Content Editor scores your article in real-time against competitors.',
+    category: 'Business & Marketing', categorySlug: 'business', logo: '🏄',
+    website: 'https://surferseo.com', pricing: 'Paid', startingPrice: '₹6,600/mo', monthlyPrice: 6600,
+    rating: 4.5, reviews: 34000, tags: ['SEO', 'Content Optimization', 'SERP Analysis', 'Keyword Research', 'Blog'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Essential', price: '₹6,600/mo', monthly: 6600, features: ['10 articles/mo', 'Content Editor', 'SERP Analyzer', 'Keyword Research'], popular: true },
+      { name: 'Scale', price: '₹13,200/mo', monthly: 13200, features: ['30 articles/mo', 'AI Humanizer', 'Topical Maps', 'API'] },
+    ]
+  },
+  // ── Learning ────────────────────────────────────────────────────────────────
+  {
+    id: 'a17', name: 'Duolingo Max', slug: 'duolingo-max',
+    tagline: 'AI-powered language learning with GPT-4',
+    description: 'Duolingo Max uses GPT-4 to add Explain My Answer (understand mistakes) and Roleplay (practice real conversations) features to the world\'s most popular language app.',
+    category: 'Learning', categorySlug: 'learning', logo: '🦜',
+    website: 'https://duolingo.com', pricing: 'Freemium', startingPrice: '₹580/mo', monthlyPrice: 580,
+    rating: 4.6, reviews: 312000, tags: ['Languages', 'GPT-4', 'Roleplay', 'Mobile', 'Gamified'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['All languages', 'Basic lessons', 'Streak tracking', 'Limited hearts'] },
+      { name: 'Super', price: '₹580/mo', monthly: 580, features: ['Ad-free', 'Unlimited hearts', 'Offline mode', 'Monthly Streak repair'] },
+      { name: 'Max', price: '₹830/mo', monthly: 830, features: ['Everything in Super', 'Explain My Answer', 'AI Roleplay', 'GPT-4 powered'], popular: true },
+    ]
+  },
+  {
+    id: 'a18', name: 'Coursera AI', slug: 'coursera-ai',
+    tagline: 'AI-powered skills learning from top universities',
+    description: "Coursera's Coach AI feature provides personalized learning guidance, explains concepts, and helps you work through assignments in courses from top universities and companies.",
+    category: 'Learning', categorySlug: 'learning', logo: '🎓',
+    website: 'https://coursera.org', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.5, reviews: 245000, tags: ['Courses', 'University', 'AI Coach', 'Certificates', 'Skills'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Audit courses', 'Video lectures', 'Limited AI', 'No certificate'] },
+      { name: 'Plus', price: '₹1,990/mo', monthly: 1990, features: ['Unlimited certificates', 'AI Coach', 'All courses', 'Career resources'], popular: true },
+    ]
+  },
+  // ── Automation ──────────────────────────────────────────────────────────────
+  {
+    id: 'a19', name: 'Bardeen AI', slug: 'bardeen-ai',
+    tagline: 'No-code AI automation for web tasks',
+    description: 'Bardeen automates repetitive browser tasks with AI. Scrape data, sync apps, automate CRM updates, and build workflows without writing code — all from a Chrome extension.',
+    category: 'Automation', categorySlug: 'automation', logo: '🤖',
+    website: 'https://bardeen.ai', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 28000, tags: ['Browser Automation', 'Chrome Extension', 'No-Code', 'Scraping', 'CRM'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Non-premium automations', 'Unlimited manual runs', 'Community playbooks'] },
+      { name: 'Pro', price: '₹1,250/mo', monthly: 1250, features: ['Premium automations', 'Scheduled runs', 'AI magic box', 'Priority support'], popular: true },
+    ]
+  },
+  {
+    id: 'a20', name: 'Clay', slug: 'clay',
+    tagline: 'AI-powered data enrichment for sales teams',
+    description: 'Clay combines 50+ data sources with AI to enrich leads and automate personalised outreach at scale. The go-to tool for modern GTM and sales teams.',
+    category: 'Automation', categorySlug: 'automation', logo: '🏺',
+    website: 'https://clay.com', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.6, reviews: 12000, tags: ['Lead Enrichment', 'Sales', 'GTM', 'Outreach', 'Data'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['100 credits/mo', 'Basic enrichment', 'LinkedIn lookup', 'CSV export'] },
+      { name: 'Starter', price: '₹3,300/mo', monthly: 3300, features: ['2000 credits/mo', 'All integrations', 'AI messaging', 'CRM sync'], popular: true },
+    ]
+  },
+  // ── Writing & Content ───────────────────────────────────────────────────────
+  {
+    id: 'a21', name: 'Sudowrite', slug: 'sudowrite',
+    tagline: 'AI writing tool built for fiction writers',
+    description: 'Sudowrite is purpose-built for novelists and fiction writers. Helps beat writer\'s block with AI-powered rewriting, brainstorming, story generation, and world-building.',
+    category: 'Writing & Content', categorySlug: 'writing', logo: '📜',
+    website: 'https://sudowrite.com', pricing: 'Paid', startingPrice: '₹1,660/mo', monthlyPrice: 1660,
+    rating: 4.4, reviews: 15000, tags: ['Fiction', 'Novel', 'Creative Writing', 'Story', 'World-building'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Hobby', price: '₹1,660/mo', monthly: 1660, features: ['30K AI words/mo', 'All writing tools', 'Story Bible', 'Brainstorm'] },
+      { name: 'Professional', price: '₹2,490/mo', monthly: 2490, features: ['90K AI words/mo', 'Priority access', 'Unlimited revision', 'Advanced models'], popular: true },
+    ]
+  },
+  {
+    id: 'a22', name: 'Hemingway Editor', slug: 'hemingway-editor',
+    tagline: 'Make your writing bold and clear with AI',
+    description: 'Hemingway Editor highlights complex sentences, passive voice, and unnecessary adverbs. The AI version now suggests rewrites to make writing more bold, direct, and readable.',
+    category: 'Writing & Content', categorySlug: 'writing', logo: '✒️',
+    website: 'https://hemingwayapp.com', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.3, reviews: 41000, tags: ['Clarity', 'Readability', 'Editing', 'Passive Voice', 'Simplify'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free (Web)', price: '₹0/mo', monthly: 0, features: ['Readability check', 'Highlight issues', 'Basic editing', 'Online tool'] },
+      { name: 'Desktop', price: '₹830 one-time', monthly: 0, features: ['Offline app', 'Export to Word', 'Markdown', 'AI suggestions'], popular: true },
+    ]
+  },
+  // ── AI Chat & Research (more) ───────────────────────────────────────────────
+  {
+    id: 'a23', name: 'Pi AI', slug: 'pi-ai',
+    tagline: 'Your personal AI for emotional support',
+    description: "Pi by Inflection AI is designed for meaningful, supportive conversations. It's empathetic, curious, and great for exploring ideas, processing emotions, and everyday chat.",
+    category: 'AI Chat & Research', categorySlug: 'ai-chat', logo: '🥧',
+    website: 'https://pi.ai', pricing: 'Free', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 23000, tags: ['Emotional Support', 'Empathetic', 'Personal', 'Conversational', 'Free'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Unlimited chat', 'Voice conversations', 'Memory', 'Cross-device'], popular: true },
+    ]
+  },
+  {
+    id: 'a24', name: 'Poe', slug: 'poe',
+    tagline: 'Access all major AI models in one app',
+    description: 'Poe by Quora gives you access to ChatGPT, Claude, Gemini, Llama, and Mistral all in one place. Create custom bots and compare models side by side.',
+    category: 'AI Chat & Research', categorySlug: 'ai-chat', logo: '🌐',
+    website: 'https://poe.com', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.3, reviews: 31000, tags: ['Multi-model', 'All AIs', 'Custom Bots', 'Compare', 'Quora'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['Basic model access', '150 GPT-4 messages/mo', 'Bot creation', 'Mobile app'] },
+      { name: 'Subscriber', price: '₹1,660/mo', monthly: 1660, features: ['Unlimited all models', 'Priority access', 'Faster responses', 'Custom bot sharing'], popular: true },
+    ]
+  },
+  // ── Video Generation (more) ─────────────────────────────────────────────────
+  {
+    id: 'a25', name: 'Sora', slug: 'sora',
+    tagline: "OpenAI's text-to-video generation model",
+    description: "Sora by OpenAI generates realistic and imaginative videos from text prompts up to 60 seconds long. Available to ChatGPT Plus and Pro subscribers with stunning cinematic quality.",
+    category: 'Video Generation', categorySlug: 'video-generation', logo: '🎥',
+    website: 'https://openai.com/sora', pricing: 'Paid', startingPrice: '₹1,650/mo', monthlyPrice: 1650,
+    rating: 4.5, reviews: 34000, tags: ['OpenAI', 'Text-to-Video', '60 Seconds', 'Cinematic', 'ChatGPT Plus'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'ChatGPT Plus', price: '₹1,650/mo', monthly: 1650, features: ['50 priority videos/mo', '480p quality', 'Up to 20 sec', 'Watermark'] },
+      { name: 'ChatGPT Pro', price: '₹16,600/mo', monthly: 16600, features: ['Unlimited videos', '1080p quality', 'Up to 60 sec', 'No watermark'], popular: true },
+    ]
+  },
+  {
+    id: 'a26', name: 'Invideo AI', slug: 'invideo-ai',
+    tagline: 'Turn text into professional videos instantly',
+    description: 'InVideo AI converts text scripts, blog posts, or prompts into fully edited videos with stock footage, AI voiceover, music, and captions — ready to publish.',
+    category: 'Video Generation', categorySlug: 'video-generation', logo: '🎬',
+    website: 'https://invideo.io', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.4, reviews: 48000, tags: ['Text-to-Video', 'Stock Footage', 'Voiceover', 'YouTube', 'Marketing'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['10 videos/mo', 'AI generation', 'Watermark', '720p'] },
+      { name: 'Plus', price: '₹1,660/mo', monthly: 1660, features: ['50 videos/mo', 'No watermark', '1080p', 'iStock access'], popular: true },
+    ]
+  },
+  // ── Music & Audio (more) ────────────────────────────────────────────────────
+  {
+    id: 'a27', name: 'Loudly', slug: 'loudly',
+    tagline: 'AI music for content creators and games',
+    description: 'Loudly generates royalty-free AI music tracks for YouTube, social media, games, and apps. Large library of customizable AI music across all genres with commercial licensing.',
+    category: 'Music & Audio', categorySlug: 'music-audio', logo: '🔈',
+    website: 'https://loudly.com', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.3, reviews: 14000, tags: ['Royalty-free', 'Background Music', 'YouTube', 'Games', 'Commercial'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['10 downloads/mo', 'Basic library', 'Personal use', 'Attribution required'] },
+      { name: 'Pro', price: '₹830/mo', monthly: 830, features: ['Unlimited downloads', 'Full library', 'Commercial license', 'No attribution'], popular: true },
+    ]
+  },
+  // ── Design (more) ───────────────────────────────────────────────────────────
+  {
+    id: 'a28', name: 'Looka', slug: 'looka',
+    tagline: 'AI-powered logo and brand identity design',
+    description: 'Looka uses AI to generate professional logos and brand kits. Answer a few questions about your business, pick your style, and get a complete brand identity in minutes.',
+    category: 'Design', categorySlug: 'design', logo: '🪄',
+    website: 'https://looka.com', pricing: 'Paid', startingPrice: '₹415 one-time', monthlyPrice: 0,
+    rating: 4.4, reviews: 52000, tags: ['Logo Design', 'Brand Kit', 'Business', 'Identity', 'No Design Skills'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Basic Logo', price: '₹415 one-time', monthly: 0, features: ['Logo files', 'PNG & SVG', 'Basic use', 'Single design'] },
+      { name: 'Premium Logo', price: '₹1,660 one-time', monthly: 0, features: ['All file formats', 'Vector files', 'Full commercial use', 'Redesign option'], popular: true },
+      { name: 'Brand Kit', price: '₹830/mo', monthly: 830, features: ['Logo + brand kit', 'Business cards', 'Social media', '500+ assets'] },
+    ]
+  },
+  // ── Business & Marketing (more) ─────────────────────────────────────────────
+  {
+    id: 'a29', name: 'Instantly AI', slug: 'instantly-ai',
+    tagline: 'AI cold email outreach at scale',
+    description: 'Instantly AI sends personalized cold emails at scale using AI. Features unlimited sending accounts, AI email writing, deliverability tools, and a built-in B2B lead database.',
+    category: 'Business & Marketing', categorySlug: 'business', logo: '📧',
+    website: 'https://instantly.ai', pricing: 'Paid', startingPrice: '₹2,490/mo', monthlyPrice: 2490,
+    rating: 4.5, reviews: 16000, tags: ['Cold Email', 'Outreach', 'Lead Gen', 'Deliverability', 'B2B'],
+    featured: false, new: false,
+    pricingPlans: [
+      { name: 'Growth', price: '₹2,490/mo', monthly: 2490, features: ['5000 active leads', 'Unlimited accounts', 'AI writing', 'Warmup tool'], popular: true },
+      { name: 'Hypergrowth', price: '₹8,300/mo', monthly: 8300, features: ['100K active leads', 'Advanced AI', 'CRM integration', 'Premium support'] },
+    ]
+  },
+  {
+    id: 'a30', name: 'Copy.ai Workflows', slug: 'copyai-workflows',
+    tagline: 'AI GTM workflows for marketing teams',
+    description: 'Copy.ai Workflows automates end-to-end go-to-market tasks — from prospect research to personalized outreach at scale — using AI agents that connect your data and tools.',
+    category: 'Business & Marketing', categorySlug: 'business', logo: '🔄',
+    website: 'https://copy.ai/workflows', pricing: 'Freemium', startingPrice: 'Free', monthlyPrice: 0,
+    rating: 4.3, reviews: 12000, tags: ['GTM', 'AI Agents', 'Workflows', 'Marketing Automation', 'Outreach'],
+    featured: false, new: true,
+    pricingPlans: [
+      { name: 'Free', price: '₹0/mo', monthly: 0, features: ['2000 workflow runs/mo', 'Basic templates', 'API access', '1 seat'] },
+      { name: 'Growth', price: '₹3,300/mo', monthly: 3300, features: ['Unlimited runs', 'Custom workflows', 'CRM integration', '5 seats'], popular: true },
+    ]
+  },
+]
+
+// Merge additional tools into main array
+tools.push(...additionalTools)
 
 // Merge free trial tools into main array
 tools.push(...freeTrialTools)

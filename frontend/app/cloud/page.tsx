@@ -44,10 +44,10 @@ const FEATURES = [
 ]
 
 const STATS = [
-  { value: '5',   label: 'Cloud Providers' },
+  { value: '4',   label: 'Cloud Providers' },
   { value: '30+', label: 'Services Covered' },
   { value: '15',  label: 'Regions' },
-  { value: 'USD/INR/EUR/GBP', label: 'Currencies' },
+  { value: '4',   label: 'Currencies', sub: 'USD · INR · EUR · GBP' },
 ]
 
 const WHY_ITEMS = [
@@ -116,9 +116,10 @@ export default function CloudPage() {
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
             {STATS.map(s => (
-              <div key={s.label} className="bg-[#0F0A1E]/80 border border-purple-900/30 rounded-xl p-4">
-                <p className="text-xl font-extrabold text-white mb-0.5">{s.value}</p>
-                <p className="text-xs text-slate-500">{s.label}</p>
+              <div key={s.label} className="bg-[#0F0A1E]/80 border border-purple-900/30 rounded-xl p-4 flex flex-col items-center text-center">
+                <p className="text-xl font-extrabold text-white leading-tight">{s.value}</p>
+                {s.sub && <p className="text-[10px] text-sky-400 font-mono mt-0.5 leading-tight">{s.sub}</p>}
+                <p className="text-xs text-slate-500 mt-1">{s.label}</p>
               </div>
             ))}
           </div>

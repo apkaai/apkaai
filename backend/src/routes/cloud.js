@@ -198,4 +198,160 @@ router.delete('/estimates/:id', requireAuth, async (req, res, next) => {
   }
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/cloud/aws-live-price
+// Fetch live on-demand price from AWS Pricing API (with 24h PostgreSQL cache).
+// Query params:
+//   instanceType  (default: t3.medium)
+//   region        (default: ap-south-1)
+//   service       (default: ec2)   — ec2 | rds | s3
+//   engine        (default: MySQL) — for RDS only
+//   storageGB     (default: 100)   — for S3 only
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/aws-live-price', calcLimiter, async (req, res, next) => {
+  try {
+    const awsPricing = require('../lib/aws-pricing')
+    const { instanceType = 't3.medium', region = 'ap-south-1', service = 'ec2', engine = 'MySQL', storageGB = '100' } = req.query
+
+    let result
+    if (service === 'rds') {
+      result = await awsPricing.getRDSPrice(instanceType, engine, region)
+    } else if (service === 's3') {
+      result = await awsPricing.getS3Price(Number(storageGB), region)
+    } else {
+      result = await awsPricing.getEC2Price(instanceType, region)
+    }
+
+    // Background cleanup (non-blocking)
+    awsPricing.clearExpiredCache().catch(() => {})
+
+    res.json({ success: true, data: result })
+  } catch (err) {
+    console.error('[Cloud] AWS live price error:', err.message)
+    res.status(503).json({
+      success: false,
+      error:   err.message,
+      message: 'AWS Pricing API unavailable. Using static pricing data instead.',
+    })
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/cloud/compare-live
+// Compare EC2/RDS/S3 across all 5 providers — AWS price from live API,
+// others from static pricing data.
+// Body: { category, vcpu, ram, storageGB?, region? }
+// ─────────────────────────────────────────────────────────────────────────────
+router.post('/compare-live', calcLimiter, async (req, res, next) => {
+  try {
+    const awsPricing = require('../lib/aws-pricing')
+    const {
+      category  = 'compute',
+      vcpu      = 2,
+      ram       = 4,
+      storageGB = 30,
+      region    = 'ap-south-1',
+    } = req.body
+
+    // Find the closest AWS EC2 instance for the requested spec
+    const closest      = awsPricing.findClosestEC2Instance(Number(vcpu), Number(ram))
+    let   awsLivePrice = null
+    let   awsSource    = 'static'
+
+    try {
+      const liveResult = await awsPricing.getEC2Price(closest.type, region)
+      awsLivePrice = liveResult
+      awsSource    = liveResult.source  // 'aws-live-fresh' or 'aws-live-cached'
+    } catch (awsErr) {
+      console.warn('[Cloud Compare-Live] AWS live fetch failed, using static:', awsErr.message)
+    }
+
+    // Static pricing fallback data for all 5 providers (from frontend pricing engine)
+    const STATIC_MONTHLY = {
+      aws:   { '2-4':  35.10, '4-8':  70.10, '8-16': 140.30, '2-8': 55.60,  '4-16': 111.20 },
+      azure: { '2-4':  36.30, '4-8':  72.50, '8-16': 145.00, '2-8': 60.80,  '4-16': 121.50 },
+      gcp:   { '2-4':  34.59, '4-8':  69.00, '8-16': 138.10, '2-8': 52.60,  '4-16': 105.20 },
+      ace:   { '2-4':  25.46, '4-8':  50.90, '8-16': 101.80, '2-8': 37.60,  '4-16':  75.20 },
+      utho:  { '2-4':  18.70, '4-8':  37.46, '8-16':  57.47, '2-8': 27.00,  '4-16':  54.00 },
+    }
+
+    const specKey = `${Number(vcpu)}-${Number(ram)}`
+
+    const providers = [
+      { id: 'aws',   name: 'AWS',        service: 'EC2 — Compute',      logo: '🟠' },
+      { id: 'azure', name: 'Azure',       service: 'Virtual Machines',   logo: '🔵' },
+      { id: 'gcp',   name: 'GCP',         service: 'Compute Engine',     logo: '🔴' },
+      { id: 'ace',   name: 'ACE',         service: 'ACE Compute',        logo: '🟢' },
+      { id: 'utho',  name: 'Utho 🇮🇳',   service: 'Utho Cloud Server',  logo: '🟤' },
+    ]
+
+    const rows = providers.map(p => {
+      let monthly = STATIC_MONTHLY[p.id]?.[specKey] || 0
+      let source  = 'static'
+      let instanceType = closest.type
+
+      // Replace AWS with live price when available
+      if (p.id === 'aws' && awsLivePrice) {
+        monthly      = awsLivePrice.monthly
+        source       = awsSource
+        instanceType = awsLivePrice.instanceType
+      }
+
+      return {
+        provider:    p.id,
+        providerName: p.name,
+        logo:        p.logo,
+        serviceName: p.service,
+        vcpu:        Number(vcpu),
+        ram:         Number(ram),
+        monthly:     parseFloat(monthly.toFixed(2)),
+        annual:      parseFloat((monthly * 12).toFixed(2)),
+        source,
+        instanceType: p.id === 'aws' ? instanceType : undefined,
+        isLive:      p.id === 'aws' && awsSource !== 'static',
+      }
+    })
+
+    // Sort by monthly price
+    rows.sort((a, b) => a.monthly - b.monthly)
+    const cheapestMonthly = rows.filter(r => r.monthly > 0)[0]?.monthly || 0
+    rows.forEach(r => { r.isLowest = r.monthly === cheapestMonthly && r.monthly > 0 })
+
+    awsPricing.clearExpiredCache().catch(() => {})
+
+    res.json({
+      success:      true,
+      category,
+      spec:         { vcpu: Number(vcpu), ram: Number(ram), storageGB: Number(storageGB), region },
+      rows,
+      awsLive:      awsLivePrice !== null,
+      awsSource,
+      dataUpdated:  new Date().toISOString(),
+    })
+  } catch (err) { next(err) }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /api/cloud/aws-cache-status  (admin/debug — no auth for simplicity)
+// Shows what's currently cached in aws_price_cache
+// ─────────────────────────────────────────────────────────────────────────────
+router.get('/aws-cache-status', async (req, res, next) => {
+  try {
+    const result = await query(
+      `SELECT cache_key, service_code, region, price_usd, unit, fetched_at, expires_at,
+              expires_at > NOW() AS is_valid
+       FROM aws_price_cache
+       ORDER BY fetched_at DESC
+       LIMIT 50`,
+      []
+    )
+    const valid   = result.rows.filter(r => r.is_valid).length
+    const expired = result.rows.filter(r => !r.is_valid).length
+    res.json({ total: result.rowCount, valid, expired, entries: result.rows })
+  } catch (err) {
+    if (err.code === '42P01') return res.json({ total: 0, valid: 0, expired: 0, entries: [], note: 'Run DB migration to create aws_price_cache table' })
+    next(err)
+  }
+})
+
 module.exports = router
