@@ -1,9 +1,9 @@
 const express    = require('express')
 const router     = express.Router()
 const crypto     = require('crypto')
-const nodemailer = require('nodemailer')
 const rateLimit  = require('express-rate-limit')
 const { query }  = require('../lib/db')
+const { buildTransporter } = require('../lib/mailer')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rate limiters — tighter limits on sensitive auth endpoints
@@ -76,34 +76,8 @@ function hashResetToken(rawToken) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email / nodemailer
+// Email / nodemailer  (transport shared via lib/mailer.js)
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Build a fresh transporter each time so env-var changes are picked up.
- * We do NOT cache the transporter singleton — the overhead is minimal and
- * caching prevents credential rotation from taking effect.
- */
-function buildTransporter() {
-  const host = process.env.SMTP_HOST
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
-
-  if (!host || !user || !pass) {
-    return null  // SMTP not configured — caller must handle gracefully
-  }
-
-  return nodemailer.createTransport({
-    host,
-    port:   parseInt(process.env.SMTP_PORT   || '587', 10),
-    secure: process.env.SMTP_SECURE          === 'true',
-    auth:   { user, pass },
-    // Reasonable timeouts to prevent hanging requests
-    connectionTimeout: 10000,
-    greetingTimeout:   10000,
-    socketTimeout:     15000,
-  })
-}
 
 /** Branded HTML reset email */
 function buildResetEmailHtml(toEmail, resetUrl) {
@@ -202,7 +176,6 @@ async function sendResetEmail(toEmail, resetUrl) {
     return { ok: false, reason: err.code || 'SMTP_SEND_FAILED' }
   }
 }
-
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/auth/register
 // ─────────────────────────────────────────────────────────────────────────────
