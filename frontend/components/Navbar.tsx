@@ -95,8 +95,6 @@ export default function Navbar() {
     return () => window.removeEventListener('storage', handler)
   }, [])
 
-  const { itemCount, toggleDrawer } = useCart()
-
   // Close profile dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
