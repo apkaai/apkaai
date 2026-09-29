@@ -14,6 +14,7 @@ const navLinks = [
   { label: 'Categories', href: '/tools#categories' },
   { label: 'Compare',    href: '/compare' },
   { label: 'Pricing',    href: '/pricing' },
+  { label: 'Plans',      href: '/plans' },
   { label: 'Blog',       href: '/blog' },
   { label: 'Contact',    href: '/contact' },
   { label: 'Cloud',      href: '/cloud' },
@@ -93,6 +94,8 @@ export default function Navbar() {
     window.addEventListener('storage', handler)
     return () => window.removeEventListener('storage', handler)
   }, [])
+
+  const { itemCount, toggleDrawer } = useCart()
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -187,7 +190,7 @@ export default function Navbar() {
             <HoverPreview
               key={link.href}
               label={
-                link.label === 'All Tools'  ? 'View all 70 AI tools' :
+                link.label === 'All Tools'  ? 'View all 43 AI tools' :
                 link.label === 'Categories' ? 'Browse tools by category' :
                 link.label === 'Compare'    ? 'Compare AI tools side by side' :
                 link.label === 'Pricing'    ? 'See pricing plans in INR' :
@@ -213,27 +216,27 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
+          {/* Search */}
+          <HoverPreview label="Search across all 43 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
+            <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
+              className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
+              {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+            </button>
+          </HoverPreview>
+
           {/* Cart */}
-          <HoverPreview label="Your cart" icon={<ShoppingCart className="w-3.5 h-3.5" />}>
+          <HoverPreview label="View your cart">
             <button
               onClick={toggleDrawer}
-              aria-label={`Cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
+              aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
               className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/30 transition-all"
             >
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
-                  {itemCount > 9 ? '9+' : itemCount}
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-purple-600 text-white text-[10px] font-bold rounded-full px-1 leading-none shadow-glow-sm">
+                  {itemCount > 99 ? '99+' : itemCount}
                 </span>
               )}
-            </button>
-          </HoverPreview>
-
-          {/* Search */}
-          <HoverPreview label="Search across all 70 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
-            <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
-              className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
-              {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
             </button>
           </HoverPreview>
 
@@ -427,18 +430,13 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {/* Cart link in mobile menu */}
-          <Link href="/cart" onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-purple-900/30 rounded-lg text-sm font-medium">
-            <ShoppingCart className="w-4 h-4 text-purple-400" />
-            Cart
-            {itemCount > 0 && (
-              <span className="ml-auto w-5 h-5 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">
-                {itemCount}
-              </span>
-            )}
-          </Link>
           <div className="pt-3 border-t border-purple-900/30 grid grid-cols-2 gap-2">
+            {/* Cart link in mobile menu */}
+            <Link href="/cart" onClick={() => setOpen(false)}
+              className="col-span-2 flex items-center justify-center gap-2 border border-purple-700/40 text-slate-300 hover:text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:border-purple-500 transition-all">
+              <ShoppingCart className="w-4 h-4" />
+              Cart{itemCount > 0 && <span className="ml-1 bg-purple-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{itemCount}</span>}
+            </Link>
             {user ? (
               <>
                 <Link href="/profile" onClick={() => setOpen(false)}
