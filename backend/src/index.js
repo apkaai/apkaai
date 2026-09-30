@@ -13,6 +13,7 @@ const adminRouter      = require('./routes/admin')
 const analyticsRouter  = require('./routes/analytics')
 const datalakeRouter   = require('./routes/datalake')
 const paymentRouter    = require('./routes/payment')
+const llmRouter        = require('./routes/llm')
 
 // cloud router is optional — only load if the file exists
 let cloudRouter = null
@@ -68,6 +69,7 @@ app.use('/api/admin',      adminRouter)
 app.use('/api/analytics',  analyticsRouter)
 app.use('/api/datalake',   datalakeRouter)   // ← DATA LAKE (ETL + SQL + S3 + Athena)
 app.use('/api/payment',   paymentRouter)    // ← RAZORPAY PAYMENT GATEWAY
+app.use('/api/llm',       llmRouter)        // ← SLM — Google Drive + Gmail + Gemini search
 
 if (cloudRouter) {
   app.use('/api/cloud', cloudRouter)
