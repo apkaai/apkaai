@@ -6,7 +6,7 @@ import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
   TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight,
   ShoppingBag, Package, CheckCircle, XCircle, Clock, RotateCcw,
-  IndianRupee, ChevronDown, ChevronUp, ExternalLink
+  IndianRupee, ChevronDown, ChevronUp, ExternalLink, Activity, Zap, HardDrive
 } from 'lucide-react'
 
 interface User    { user_id: string; name: string; email: string; role: string; created_at: string }
@@ -261,6 +261,8 @@ export default function AdminDashboard() {
     { id: 'contacts', label: 'Contacts',  icon: Mail },
     { id: 'orders',   label: 'Orders',    icon: ShoppingBag },
     { id: 'datalake', label: 'Data Lake', icon: Database },
+    { id: 'monitoring',         label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring' },
+    { id: 'monitoring-grafana', label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' },
   ] as const
 
   return (
