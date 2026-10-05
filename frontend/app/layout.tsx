@@ -40,6 +40,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      {/* Flash-prevention: apply theme class before first paint */}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(!t)t=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.classList.toggle('light-mode',t==='light');}catch(e){}})();`
+          }}
+        />
+      </head>
       <body className="bg-[#08051A] text-slate-100 antialiased relative">
         <CartProvider>
           <WishlistProvider>
