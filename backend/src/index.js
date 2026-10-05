@@ -19,6 +19,7 @@ const reviewsRouter    = require('./routes/reviews')
 const referralRouter   = require('./routes/referral')
 const newsletterRouter = require('./routes/newsletter')
 const invoicesRouter   = require('./routes/invoices')
+const demoRouter       = require('./routes/demo')
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -70,6 +71,7 @@ app.use('/api/reviews',    reviewsRouter)
 app.use('/api/referral',   referralRouter)
 app.use('/api/newsletter', newsletterRouter)
 app.use('/api/invoices',   invoicesRouter)
+app.use('/api/demo',       demoRouter)
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -88,6 +90,15 @@ app.use((err, req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`✅ ApkaAI API running on http://localhost:${PORT}`)
   console.log(`   Environment : ${process.env.NODE_ENV || 'development'}`)
+
+  // Start demo reminder scheduler (checks every 15 min)
+  try {
+    const { startReminderScheduler } = require('./services/reminderService')
+    startReminderScheduler()
+  } catch (e) {
+    console.warn('[Startup] Reminder scheduler not started:', e.message)
+  }
+})
   console.log(`   AWS Region  : ${process.env.AWS_REGION || 'ap-south-1'}`)
 })
 

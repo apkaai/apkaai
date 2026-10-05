@@ -284,3 +284,37 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id  ON invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id);
+
+-- ── demo_bookings ─────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS demo_bookings (
+  id               UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+  name             VARCHAR(200) NOT NULL,
+  email            VARCHAR(200) NOT NULL,
+  company          VARCHAR(200),
+  phone            VARCHAR(30),
+  use_case         TEXT,
+  slot_date        DATE         NOT NULL,               -- e.g. 2026-10-15
+  slot_time        TIME         NOT NULL,               -- e.g. 14:30:00
+  slot_timezone    VARCHAR(80)  DEFAULT 'Asia/Kolkata',
+  duration_minutes INTEGER      DEFAULT 30,
+  status           VARCHAR(20)  DEFAULT 'pending'
+                   CHECK (status IN ('pending','confirmed','cancelled','completed','no_show')),
+  calendar_type    VARCHAR(20)  DEFAULT 'google'
+                   CHECK (calendar_type IN ('google','outlook','teams','none')),
+  meeting_link     TEXT,                                -- Google Meet / Teams link
+  google_event_id  VARCHAR(200),                        -- Google Calendar event id
+  ms_event_id      VARCHAR(200),                        -- Microsoft Graph event id
+  reminder_24h_sent BOOLEAN     DEFAULT FALSE,
+  reminder_1h_sent  BOOLEAN     DEFAULT FALSE,
+  cancellation_reason TEXT,
+  created_at       TIMESTAMPTZ  DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_demo_email       ON demo_bookings(email);
+CREATE INDEX IF NOT EXISTS idx_demo_slot_date   ON demo_bookings(slot_date);
+CREATE INDEX IF NOT EXISTS idx_demo_status      ON demo_bookings(status);
+
+CREATE OR REPLACE TRIGGER demo_bookings_updated_at
+  BEFORE UPDATE ON demo_bookings
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

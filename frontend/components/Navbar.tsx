@@ -10,14 +10,15 @@ import { useCart } from '@/lib/cart-context'
 import { tools } from '@/lib/tools-data'
 
 const navLinks = [
-  { label: 'All Tools',  href: '/tools' },
-  { label: 'Categories', href: '/tools#categories' },
-  { label: 'Compare',    href: '/compare' },
-  { label: 'Pricing',    href: '/pricing' },
-  { label: 'Plans',      href: '/plans' },
-  { label: 'Blog',       href: '/blog' },
-  { label: 'Contact',    href: '/contact' },
-  { label: 'Cloud',      href: '/cloud' },
+  { label: 'All Tools',   href: '/tools' },
+  { label: 'Categories',  href: '/tools#categories' },
+  { label: 'Compare',     href: '/compare' },
+  { label: 'Pricing',     href: '/pricing' },
+  { label: 'Plans',       href: '/plans' },
+  { label: 'Blog',        href: '/blog' },
+  { label: 'Contact',     href: '/contact' },
+  { label: 'Cloud',       href: '/cloud' },
+  { label: '📅 Book Demo', href: '/demo' },
 ]
 
 // ── Search suggestions ─────────────────────────────────────────────────────────
