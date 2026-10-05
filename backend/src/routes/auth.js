@@ -3,7 +3,7 @@ const router     = express.Router()
 const crypto     = require('crypto')
 const rateLimit  = require('express-rate-limit')
 const { query }  = require('../lib/db')
-const { buildTransporter } = require('../lib/mailer')
+const { sendEmail } = require('../services/emailService')
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rate limiters — tighter limits on sensitive auth endpoints
@@ -76,8 +76,28 @@ function hashResetToken(rawToken) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Email / nodemailer  (transport shared via lib/mailer.js)
+// Email — now powered by SES via emailService (SMTP fallback built-in)
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Send the password-reset email via SES (or SMTP fallback).
+ * Returns { ok: true } on success or { ok: false, reason: string } on failure.
+ * NEVER throws — callers must handle the result gracefully.
+ */
+async function sendResetEmail(toEmail, resetUrl) {
+  const subject = 'Reset your ApkaAI password'
+  const html    = buildResetEmailHtml(toEmail, resetUrl)
+  const text    = [
+    'Reset your ApkaAI password',
+    '',
+    'We received a request to reset your password.',
+    `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
+    '',
+    "If you didn't request this, ignore this email.",
+  ].join('\n')
+
+  return sendEmail(toEmail, subject, html, text)
+}
 
 /** Branded HTML reset email */
 function buildResetEmailHtml(toEmail, resetUrl) {
@@ -142,40 +162,25 @@ function buildResetEmailHtml(toEmail, resetUrl) {
 }
 
 /**
- * Send the password-reset email.
+ * Send the password-reset email via SES (or SMTP fallback).
  * Returns { ok: true } on success or { ok: false, reason: string } on failure.
  * NEVER throws — callers must handle the result gracefully.
  */
 async function sendResetEmail(toEmail, resetUrl) {
-  const transporter = buildTransporter()
-  if (!transporter) {
-    return { ok: false, reason: 'SMTP_NOT_CONFIGURED' }
-  }
+  const subject = 'Reset your ApkaAI password'
+  const html    = buildResetEmailHtml(toEmail, resetUrl)
+  const text    = [
+    'Reset your ApkaAI password',
+    '',
+    'We received a request to reset your password.',
+    `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
+    '',
+    "If you didn't request this, ignore this email.",
+  ].join('\n')
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER
-
-  try {
-    await transporter.sendMail({
-      from:    `"ApkaAI" <${from}>`,
-      to:      toEmail,
-      subject: 'Reset your ApkaAI password',
-      html:    buildResetEmailHtml(toEmail, resetUrl),
-      text:    [
-        'Reset your ApkaAI password',
-        '',
-        'We received a request to reset your password.',
-        `Click this link to reset it (expires in 30 minutes): ${resetUrl}`,
-        '',
-        "If you didn't request this, ignore this email.",
-      ].join('\n'),
-    })
-    return { ok: true }
-  } catch (err) {
-    // Log the SMTP error but NOT the reset URL or raw token
-    console.error('[Auth] SMTP send failed:', err.code || err.message)
-    return { ok: false, reason: err.code || 'SMTP_SEND_FAILED' }
-  }
+  return sendEmail(toEmail, subject, html, text)
 }
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/auth/register
 // ─────────────────────────────────────────────────────────────────────────────
@@ -201,6 +206,34 @@ router.post('/register', async (req, res, next) => {
     )
     const user  = result.rows[0]
     const token = createToken(user.user_id, user.email)
+
+    // Track referral if a ref code was passed
+    if (req.body.referralCode) {
+      try {
+        const refCode = String(req.body.referralCode).toUpperCase().trim()
+        const referrerResult = await query(
+          'SELECT user_id FROM users WHERE referral_code = $1',
+          [refCode]
+        )
+        if (referrerResult.rowCount > 0 && referrerResult.rows[0].user_id !== user.user_id) {
+          const referrerId = referrerResult.rows[0].user_id
+          await query(
+            `INSERT INTO referrals (referrer_id, referred_id, code, status, converted_at)
+             VALUES ($1, $2, $3, 'signed_up', NOW())
+             ON CONFLICT DO NOTHING`,
+            [referrerId, user.user_id, refCode]
+          )
+          await query(
+            'UPDATE users SET referred_by = $1 WHERE user_id = $2',
+            [referrerId, user.user_id]
+          )
+        }
+      } catch (refErr) {
+        // Non-fatal — log but don't fail registration
+        console.warn('[Auth] Referral tracking error:', refErr.message)
+      }
+    }
+
     res.status(201).json({
       success: true,
       token,
