@@ -4,14 +4,81 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   All theme values live here. Components reference var(--token).
+   Dark mode is the default; light-mode class on <html> overrides.
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  --bg-dark: #0F0A1E;
-  --bg-darker: #08051A;
-  --purple: #7C3AED;
-  --violet: #6D28D9;
-  --glow: #A855F7;
+  /* ── Dark mode tokens (default) ── */
+  --bg:               #08051A;    /* page background */
+  --bg-2:             #0F0A1E;    /* slightly lighter bg (sections) */
+  --bg-3:             #150D2E;    /* card bg */
+  --surface:          #1A1035;    /* elevated surface (dropdowns, modals) */
+  --surface-2:        #1E1540;    /* inputs */
+
+  --text-primary:     #E2E8F0;    /* headings, strong text */
+  --text-secondary:   #94A3B8;    /* body, descriptions */
+  --text-muted:       #64748B;    /* captions, hints */
+  --text-inverse:     #1c1745;    /* text on light/accent surfaces */
+
+  --accent:           #7C3AED;    /* primary brand purple */
+  --accent-hover:     #8B5CF6;    /* lighter on hover */
+  --accent-light:     rgba(124,58,237,0.15); /* tinted backgrounds */
+  --accent-text:      #C4B5FD;    /* purple text on dark bg */
+
+  --border:           rgba(124,58,237,0.25);
+  --border-subtle:    rgba(124,58,237,0.12);
+
+  --shadow-sm:        0 0 15px rgba(124,58,237,0.2);
+  --shadow-md:        0 0 25px rgba(124,58,237,0.35);
+  --shadow-card:      0 20px 40px rgba(124,58,237,0.25);
+
+  --glow:             #A855F7;
+
+  /* Legacy hex vars (still referenced by some Tailwind JIT classes) */
+  --bg-dark:          #0F0A1E;
+  --bg-darker:        #08051A;
+  --purple:           #7C3AED;
+  --violet:           #6D28D9;
 }
 
+/* ── Light mode token overrides ──────────────────────────────────────────── */
+html.light-mode {
+  --bg:               #f8f7ff;    /* warm off-white, barely lavender */
+  --bg-2:             #f2f0ff;    /* section tint */
+  --bg-3:             #edeaff;    /* card backgrounds */
+  --surface:          #ffffff;    /* elevated surfaces */
+  --surface-2:        #f8f7ff;    /* inputs */
+
+  --text-primary:     #1c1745;    /* deep indigo-black — 15:1 on white */
+  --text-secondary:   #4a4770;    /* mid indigo-gray — 5.8:1 on white */
+  --text-muted:       #6b6894;    /* captions — 4.6:1 on white */
+  --text-inverse:     #ffffff;    /* text on accent/dark surfaces */
+
+  --accent:           #6d28d9;    /* darkened for AA on light — 5.9:1 on white */
+  --accent-hover:     #5b21b6;    /* darker on hover */
+  --accent-light:     rgba(109,40,217,0.08);
+  --accent-text:      #5b21b6;    /* purple text on light bg */
+
+  --border:           rgba(109,40,217,0.18);
+  --border-subtle:    rgba(109,40,217,0.10);
+
+  /* Shadows replace glows in light mode */
+  --shadow-sm:        0 1px 4px rgba(109,40,217,0.10), 0 0 0 1px rgba(109,40,217,0.08);
+  --shadow-md:        0 4px 16px rgba(109,40,217,0.12), 0 0 0 1px rgba(109,40,217,0.10);
+  --shadow-card:      0 8px 32px rgba(109,40,217,0.10), 0 2px 8px rgba(0,0,0,0.06);
+
+  --glow:             #6d28d9;
+
+  /* Legacy */
+  --bg-dark:          #f2f0ff;
+  --bg-darker:        #f8f7ff;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -23,47 +90,53 @@ html {
 }
 
 body {
-  background-color: var(--bg-darker);
-  color: #E2E8F0;
+  background-color: var(--bg);
+  color: var(--text-primary);
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #08051A; }
-::-webkit-scrollbar-thumb { background: #7C3AED; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #A855F7; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-hover); }
 
-/* Glow effect */
-.glow-text {
-  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHARED COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════════════════════════ */
 
+/* Glow / shadow border */
 .glow-border {
-  border: 1px solid rgba(124, 58, 237, 0.4);
-  box-shadow: 0 0 15px rgba(124, 58, 237, 0.2), inset 0 0 15px rgba(124, 58, 237, 0.05);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
-
 .glow-border:hover {
-  border-color: rgba(168, 85, 247, 0.7);
-  box-shadow: 0 0 25px rgba(124, 58, 237, 0.4), inset 0 0 20px rgba(124, 58, 237, 0.1);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
 }
 
-/* Card hover */
+/* Tool cards */
 .ai-card {
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.25s ease;
+}
+html:not(.light-mode) .ai-card {
   background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(15,10,30,0.9) 100%);
 }
-
+html.light-mode .ai-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
 .ai-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(124,58,237,0.3);
+  box-shadow: var(--shadow-card);
 }
 
-/* Badge */
+/* New badge */
 .badge-new {
-  background: linear-gradient(90deg, #7C3AED, #A855F7);
+  background: linear-gradient(90deg, var(--accent), var(--glow));
+  color: #ffffff;
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 20px;
@@ -72,35 +145,72 @@ body {
   text-transform: uppercase;
 }
 
-/* Gradient text */
-.gradient-text {
+/* Gradient headline text — dark: near-white→purple, light: deep-purple only */
+html:not(.light-mode) .gradient-text {
   background: linear-gradient(135deg, #E2E8F0 0%, #A855F7 50%, #7C3AED 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+html.light-mode .gradient-text {
+  background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-/* Purple button */
+/* Glow text (headline shadow) */
+.glow-text {
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+html.light-mode .glow-text {
+  text-shadow: none;
+}
+
+/* Primary button */
 .btn-primary {
-  background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  color: #ffffff !important;
   transition: all 0.2s ease;
 }
-
 .btn-primary:hover {
-  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
-  box-shadow: 0 0 20px rgba(124,58,237,0.5);
+  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+  box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
+html.light-mode .btn-primary {
+  background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+  box-shadow: 0 2px 8px rgba(109,40,217,0.25);
+}
+html.light-mode .btn-primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  box-shadow: 0 4px 16px rgba(109,40,217,0.35);
+}
 
-/* Grid background pattern */
+/* Grid background */
 .grid-bg {
   background-image:
     linear-gradient(rgba(124,58,237,0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(124,58,237,0.05) 1px, transparent 1px);
   background-size: 50px 50px;
 }
+html.light-mode .grid-bg {
+  background-image:
+    linear-gradient(rgba(109,40,217,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(109,40,217,0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+html:not(.light-mode) .grid-bg {
+  background-image:
+    linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-color: transparent !important;
+}
 
-/* ── Chatbot bounce animation ─────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CHATBOT ANIMATION
+   ═══════════════════════════════════════════════════════════════════════════ */
 @keyframes botBounce {
   0%   { transform: translateY(0px)    scaleX(1)    scaleY(1);    }
   30%  { transform: translateY(-12px)  scaleX(0.96) scaleY(1.04); }
@@ -110,202 +220,173 @@ body {
   93%  { transform: translateY(-3px)   scaleX(0.99) scaleY(1.01); }
   100% { transform: translateY(0px)    scaleX(1)    scaleY(1);    }
 }
-
 @keyframes botShadow {
   0%,100% { transform: scaleX(1);   opacity: 0.35; }
   50%      { transform: scaleX(0.6); opacity: 0.15; }
 }
+.bot-bounce { animation: botBounce 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite; }
+.bot-bounce:hover { animation: none; transform: scale(1.12); transition: transform 0.2s ease; }
+.bot-shadow { animation: botShadow 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite; }
 
-.bot-bounce {
-  animation: botBounce 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
-}
-
-.bot-bounce:hover {
-  animation: none;
-  transform: scale(1.12);
-  transition: transform 0.2s ease;
-}
-
-.bot-shadow {
-  animation: botShadow 1.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
-}
-
-/* ── Starry background layering ──────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   STARRY BACKGROUND LAYERING
+   ═══════════════════════════════════════════════════════════════════════════ */
 body > *:not(canvas) {
   position: relative;
   z-index: 1;
 }
 
-html:not(.light-mode) .grid-bg {
-  background-image:
-    linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
-  background-size: 50px 50px;
-  background-color: transparent !important;
-}
-
-/* ── Theme transition ─────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEME TRANSITIONS — smooth 200ms switch, no flash
+   ═══════════════════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
-  transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 250ms;
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 200ms;
   transition-timing-function: ease;
 }
-
-/* ── Light mode overrides ─────────────────────────────────────────────────── */
-html.light-mode {
-  --bg-dark:   #f0f4ff;
-  --bg-darker: #e8eeff;
+/* Exclude transforms from the catch-all so animations don't slow */
+.ai-card, .btn-primary, .bot-bounce {
+  transition-property: background, background-color, border-color, color, box-shadow, transform;
 }
 
-html.light-mode body {
-  background-color: #f0f4ff !important;
-  color: #1e1b4b !important;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLASH PREVENTION — inline script in layout.tsx sets class before paint
+   This block ensures the page starts in the correct theme.
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.light-mode { color-scheme: light; }
+html:not(.light-mode) { color-scheme: dark; }
 
-html.light-mode .bg-\[\#08051A\]   { background-color: #e8eeff !important; }
-html.light-mode .bg-\[\#0A0618\]   { background-color: #eef0ff !important; }
-html.light-mode .bg-\[\#0D0826\]   { background-color: #e4e8ff !important; }
-html.light-mode .bg-\[\#0F0A1E\]   { background-color: #f5f3ff !important; }
-html.light-mode .bg-\[\#150D2E\]   { background-color: #ede9ff !important; }
-html.light-mode .bg-\[\#1A1035\]   { background-color: #ede9ff !important; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   LIGHT MODE — TAILWIND CLASS OVERRIDES
+   Resets hardcoded dark hex/opacity values to design tokens.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Text colour overrides ────────────────────────────────────────────────── */
-html.light-mode .text-white       { color: #1e1b4b !important; }
-html.light-mode .text-slate-100   { color: #1e1b4b !important; }
-html.light-mode .text-slate-200   { color: #2d2a5e !important; } /* was missing — bot chat messages were invisible */
-html.light-mode .text-slate-300   { color: #1e1b4b !important; }
-html.light-mode .text-slate-400   { color: #4c4f6b !important; }
-html.light-mode .text-slate-500   { color: #5c5f85 !important; }
-html.light-mode .text-slate-600   { color: #3d3a6b !important; } /* footer bottom bar — was ~4.0:1, now >4.5:1 */
+/* Page / section backgrounds */
+html.light-mode .bg-\[\#08051A\]    { background-color: var(--bg)        !important; }
+html.light-mode .bg-\[\#0A0618\]    { background-color: var(--bg)        !important; }
+html.light-mode .bg-\[\#0D0826\]    { background-color: var(--bg-2)      !important; }
+html.light-mode .bg-\[\#0F0A1E\]    { background-color: var(--bg-2)      !important; }
+html.light-mode .bg-\[\#150D2E\]    { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-\[\#1A1035\]    { background-color: var(--surface)   !important; }
+html.light-mode .bg-\[\#1E1540\]    { background-color: var(--surface-2) !important; }
 
-/* Purple tones — were 2.3–3.2:1, all now ≥4.5:1 */
-html.light-mode .text-purple-300  { color: #5b21b6 !important; } /* #C4B5FD → #5b21b6: 7.2:1 on #f0f4ff */
-html.light-mode .text-purple-400  { color: #6d28d9 !important; } /* #A78BFA → #6d28d9: 5.8:1 on #f0f4ff */
+/* Dark opacity tints → token-based tints */
+html.light-mode .bg-purple-950\/50  { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-purple-950\/40  { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-purple-950\/30  { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-purple-950\/20  { background-color: var(--bg-2)      !important; }
+html.light-mode .bg-purple-900\/40  { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-purple-900\/30  { background-color: var(--bg-2)      !important; }
+html.light-mode .bg-purple-900\/20  { background-color: var(--bg-2)      !important; }
+html.light-mode .bg-purple-800\/40  { background-color: var(--bg-3)      !important; }
+html.light-mode .bg-purple-800\/30  { background-color: var(--bg-2)      !important; }
 
-/* Colour-coded stat/badge values — were 1.9–2.9:1, all now ≥4.5:1 */
-html.light-mode .text-amber-400   { color: #92400e !important; } /* #FBBF24 → #92400e: 7.1:1 on #f5f3ff */
-html.light-mode .text-emerald-400 { color: #065f46 !important; } /* #34D399 → #065f46: 8.0:1 on #f5f3ff */
-html.light-mode .text-blue-400    { color: #1e40af !important; } /* #60A5FA → #1e40af: 7.4:1 on #f5f3ff */
-html.light-mode .text-blue-300    { color: #1e3a8a !important; } /* #93C5FD → #1e3a8a: 9.2:1 — footer LinkedIn badge */
-html.light-mode .text-sky-300     { color: #0c4a6e !important; } /* #7DD3FC → #0c4a6e: 9.8:1 — footer Twitter badge */
-
-/* Red — used for Remove button at opacity 60, now fully opaque dark red */
-html.light-mode .text-red-400     { color: #991b1b !important; } /* #F87171 → #991b1b: 7.2:1 */
-
-/* Emerald-300 / blue-300 used in toasts */
-html.light-mode .text-emerald-300 { color: #065f46 !important; }
-
-/* ── Border overrides ─────────────────────────────────────────────────────── */
-html.light-mode .border-purple-900\/30 { border-color: rgba(109,40,217,0.2) !important; }
-html.light-mode .border-purple-900\/20 { border-color: rgba(109,40,217,0.15) !important; }
-html.light-mode .border-\[\#08051A\]   { border-color: rgba(109,40,217,0.25) !important; } /* HeroSection avatar separators */
-
-/* ── Background overrides — form inputs, dark-tinted containers ──────────── */
-/* These opacity variants aren't caught by the hex overrides above */
-html.light-mode .bg-purple-950\/30 { background-color: #ede9ff !important; }
-html.light-mode .bg-purple-950\/40 { background-color: #ede9ff !important; }
-html.light-mode .bg-purple-950\/50 { background-color: #e5e1ff !important; }
-html.light-mode .bg-purple-950\/20 { background-color: #f0eeff !important; }
-html.light-mode .bg-purple-900\/40 { background-color: #ede9ff !important; } /* tag pills, icon boxes */
-html.light-mode .bg-purple-900\/30 { background-color: #ede9ff !important; } /* hover tints */
-html.light-mode .bg-purple-900\/20 { background-color: #f5f3ff !important; }
-
-/* Input focus rings */
-html.light-mode input, html.light-mode textarea, html.light-mode select {
-  background-color: #ffffff !important;
-  color: #1e1b4b !important;
-  border-color: rgba(109,40,217,0.35) !important;
-}
-html.light-mode input::placeholder, html.light-mode textarea::placeholder {
-  color: #7c7a9e !important;
-}
-
-/* ── Header / footer / glow ──────────────────────────────────────────────── */
-html.light-mode header {
-  background-color: rgba(240,244,255,0.92) !important;
-  border-color: rgba(109,40,217,0.2) !important;
-}
-
-html.light-mode footer {
-  background-color: #e8eeff !important;
-}
-
-html.light-mode .glow-border {
-  border-color: rgba(124,58,237,0.25) !important;
-  box-shadow: 0 0 10px rgba(124,58,237,0.1) !important;
-}
-
-html.light-mode ::-webkit-scrollbar-track { background: #e8eeff; }
-html.light-mode ::-webkit-scrollbar-thumb { background: #a78bfa; }
-
-/* ── .ai-card — was dark gradient, now light card in light mode ───────────── */
-html.light-mode .ai-card {
-  background: linear-gradient(135deg, rgba(124,58,237,0.06) 0%, #f5f3ff 100%) !important;
-  border: 1px solid rgba(124,58,237,0.18) !important;
-}
-html.light-mode .ai-card:hover {
-  box-shadow: 0 8px 24px rgba(124,58,237,0.15) !important;
-}
-
-/* ── gradient-text — remove near-white start stop in light mode ───────────── */
-html.light-mode .gradient-text {
-  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #a855f7 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-}
-
-/* ── Active pill/button: bg-purple-600 + text-white → navy on purple = 2.4:1 */
-/* Override: keep white text on purple active pill (white on #7C3AED = 4.6:1) */
-html.light-mode .bg-purple-600 .text-white,
-html.light-mode .bg-purple-600.text-white {
-  color: #ffffff !important;
-}
-/* Specifically target active filter pills sitewide */
-html.light-mode button.bg-purple-600,
-html.light-mode a.bg-purple-600 {
-  color: #ffffff !important;
-}
-
-/* ── AIChatbot — chat header gradient, input, message backgrounds ─────────── */
-html.light-mode .chatbot-header,
-html.light-mode [class*="from-purple-900"][class*="to-violet-900"] {
-  background: linear-gradient(135deg, #ede9ff 0%, #e0d9ff 100%) !important;
-}
-/* Chatbot quick-reply pills */
-html.light-mode .bg-purple-900\/40.text-purple-300 {
-  background-color: #ede9ff !important;
-  color: #5b21b6 !important;
-}
-
-/* ── Pricing status badge backgrounds (dark tinted — keep readable) ──────── */
+/* Status badge backgrounds (semantic colours preserved) */
 html.light-mode .bg-emerald-900\/50 { background-color: #d1fae5 !important; }
 html.light-mode .bg-blue-900\/50    { background-color: #dbeafe !important; }
 html.light-mode .bg-amber-900\/50   { background-color: #fef3c7 !important; }
 html.light-mode .bg-red-900\/20     { background-color: #fee2e2 !important; }
+html.light-mode .bg-blue-900\/20    { background-color: #dbeafe !important; }
+html.light-mode .bg-sky-900\/20     { background-color: #e0f2fe !important; }
 
-/* ── Social badge backgrounds in Footer ──────────────────────────────────── */
-html.light-mode .bg-blue-900\/20  { background-color: #dbeafe !important; }
-html.light-mode .bg-sky-900\/20   { background-color: #e0f2fe !important; }
+/* ── Text colours ─────────────────────────────────────────────────────────── */
+html.light-mode .text-white         { color: var(--text-primary)   !important; }
+html.light-mode .text-slate-100     { color: var(--text-primary)   !important; }
+html.light-mode .text-slate-200     { color: var(--text-primary)   !important; }
+html.light-mode .text-slate-300     { color: var(--text-primary)   !important; }
+html.light-mode .text-slate-400     { color: var(--text-secondary) !important; }
+html.light-mode .text-slate-500     { color: var(--text-muted)     !important; }
+html.light-mode .text-slate-600     { color: var(--text-secondary) !important; }
 
-/* ── Compare / cart dark containers ─────────────────────────────────────── */
-html.light-mode .bg-purple-800\/40 { background-color: #ede9ff !important; }
-html.light-mode .bg-purple-800\/30 { background-color: #f0eeff !important; }
+/* Purple accent text — darkened for AA on light */
+html.light-mode .text-purple-300    { color: #5b21b6 !important; } /* 7.2:1 */
+html.light-mode .text-purple-400    { color: #6d28d9 !important; } /* 5.9:1 */
+html.light-mode .text-purple-500    { color: #6d28d9 !important; }
 
-/* ── grid-bg in light mode — subtle purple tint, not dark grid ───────────── */
-html.light-mode .grid-bg {
-  background-image:
-    linear-gradient(rgba(124,58,237,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,58,237,0.06) 1px, transparent 1px);
-  background-size: 50px 50px;
-  background-color: transparent !important;
+/* Semantic text colours — all verified ≥4.5:1 on --bg */
+html.light-mode .text-emerald-400   { color: #065f46 !important; } /* 8.0:1 */
+html.light-mode .text-emerald-300   { color: #065f46 !important; }
+html.light-mode .text-blue-400      { color: #1e40af !important; } /* 7.4:1 */
+html.light-mode .text-blue-300      { color: #1e3a8a !important; } /* 9.2:1 */
+html.light-mode .text-sky-300       { color: #0c4a6e !important; } /* 9.8:1 */
+html.light-mode .text-amber-400     { color: #92400e !important; } /* 7.1:1 */
+html.light-mode .text-red-400       { color: #991b1b !important; } /* 7.2:1 */
+
+/* Keep white text ON coloured backgrounds (active pills, primary buttons) */
+html.light-mode button.bg-purple-600,
+html.light-mode a.bg-purple-600,
+html.light-mode .bg-purple-600 > .text-white,
+html.light-mode .bg-purple-600.text-white   { color: #ffffff !important; }
+
+/* ── Borders ──────────────────────────────────────────────────────────────── */
+html.light-mode .border-purple-900\/30 { border-color: var(--border)        !important; }
+html.light-mode .border-purple-900\/20 { border-color: var(--border-subtle) !important; }
+html.light-mode .border-purple-800\/40 { border-color: var(--border)        !important; }
+html.light-mode .border-purple-800\/30 { border-color: var(--border-subtle) !important; }
+html.light-mode .border-purple-700\/40 { border-color: var(--border)        !important; }
+html.light-mode .border-purple-700\/50 { border-color: var(--border)        !important; }
+html.light-mode .border-\[\#08051A\]   { border-color: var(--border)        !important; }
+
+/* ── Form elements ────────────────────────────────────────────────────────── */
+html.light-mode input,
+html.light-mode textarea,
+html.light-mode select {
+  background-color: var(--surface)   !important;
+  color:            var(--text-primary) !important;
+  border-color:     var(--border)    !important;
+}
+html.light-mode input::placeholder,
+html.light-mode textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+html.light-mode input:focus,
+html.light-mode textarea:focus,
+html.light-mode select:focus {
+  border-color: var(--accent)        !important;
+  box-shadow:   0 0 0 3px rgba(109,40,217,0.12) !important;
+  outline: none !important;
 }
 
-/* ── Coming Soon watermark — light/dark mode toggle ─────────────────────── */
-/* Dark mode: show dark variant, hide light variant */
+/* ── Navbar & header ──────────────────────────────────────────────────────── */
+html.light-mode header {
+  background-color: rgba(248,247,255,0.95) !important;
+  border-color:     var(--border)          !important;
+  box-shadow:       0 1px 12px rgba(109,40,217,0.08) !important;
+  backdrop-filter:  blur(12px);
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+html.light-mode footer {
+  background-color: var(--bg-3) !important;
+  border-color:     var(--border) !important;
+}
+
+/* ── Glow border — replace glow with shadow in light mode ────────────────── */
+html.light-mode .glow-border {
+  border-color: var(--border)   !important;
+  box-shadow:   var(--shadow-sm) !important;
+}
+html.light-mode .glow-border:hover {
+  border-color: var(--accent)   !important;
+  box-shadow:   var(--shadow-md) !important;
+}
+
+/* ── Chatbot ──────────────────────────────────────────────────────────────── */
+html.light-mode [class*="from-purple-900"][class*="to-violet-900"] {
+  background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg-2) 100%) !important;
+}
+html.light-mode .bg-purple-900\/40.text-purple-300 {
+  background-color: var(--bg-3) !important;
+  color: var(--accent-text)     !important;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+html.light-mode ::-webkit-scrollbar-track { background: var(--bg); }
+html.light-mode ::-webkit-scrollbar-thumb { background: var(--accent); }
+html.light-mode ::-webkit-scrollbar-thumb:hover { background: var(--accent-hover); }
+
+/* ── Watermark visibility ─────────────────────────────────────────────────── */
 html:not(.light-mode) .html-light-hidden { display: block; }
 html:not(.light-mode) .html-light-show   { display: none  !important; }
-
-/* Light mode: hide dark variant, show light variant */
-html.light-mode .html-light-hidden { display: none  !important; }
-html.light-mode .html-light-show   { display: block !important; }
+html.light-mode .html-light-hidden       { display: none  !important; }
+html.light-mode .html-light-show         { display: block !important; }
