@@ -78,21 +78,28 @@ router.get('/slots', async (req, res, next) => {
       return res.json({ date, slots: [], message: 'No slots on weekends' })
     }
 
-    // Fetch already-booked confirmed/pending slots for this date
-    const booked = await query(
-      `SELECT slot_time FROM demo_bookings
-       WHERE slot_date = $1 AND status IN ('confirmed','pending')`,
-      [date]
-    )
-    const bookedTimes = new Set(booked.rows.map(r => r.slot_time.slice(0, 5)))
+    // Try to fetch already-booked slots, but handle missing table gracefully
+    let bookedTimes = new Set()
+    try {
+      const booked = await query(
+        `SELECT slot_time FROM demo_bookings
+         WHERE slot_date = $1 AND status IN ('confirmed','pending')`,
+        [date]
+      )
+      bookedTimes = new Set(booked.rows.map(r => r.slot_time.slice(0, 5)))
+    } catch (dbErr) {
+      // Table may not exist yet — return all slots as available
+      console.warn('[Demo] demo_bookings table not ready:', dbErr.message)
+    }
 
     // Build available slots (exclude past times for today)
-    const today = new Date().toISOString().slice(0, 10)
-    const nowHHMM = new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false })
+    const today  = new Date().toISOString().slice(0, 10)
+    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }))
+    const nowHHMM = `${nowIST.getHours().toString().padStart(2,'0')}:${nowIST.getMinutes().toString().padStart(2,'0')}`
 
     const slots = SLOT_TIMES.map(time => {
-      const isBooked  = bookedTimes.has(time)
-      const isPast    = date === today && time <= nowHHMM
+      const isBooked = bookedTimes.has(time)
+      const isPast   = date === today && time <= nowHHMM
       return {
         time,
         available: !isBooked && !isPast,

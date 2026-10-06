@@ -274,40 +274,42 @@ async function createCalendarEvent(booking, calendarType = 'google') {
  * Returns add-to-calendar links for Google, Outlook, Apple, Teams
  */
 function buildCalendarLinks(booking) {
+  // Guard against null/undefined booking fields
+  if (!booking || !booking.slot_date || !booking.slot_time) {
+    return {
+      googleUrl:    'https://calendar.google.com',
+      outlookUrl:   'https://outlook.live.com/calendar',
+      office365Url: 'https://outlook.office.com/calendar',
+      icsUrl:       '',
+      displayTime:  'Time to be confirmed',
+    }
+  }
+
   const { startIso, endIso, displayTime } = buildDateTimeRange(
     booking.slot_date, booking.slot_time,
-    booking.slot_timezone, booking.duration_minutes
+    booking.slot_timezone || 'Asia/Kolkata',
+    booking.duration_minutes || 30
   )
 
-  const title    = encodeURIComponent(`ApkaAI Demo — ${booking.name}`)
-  const details  = encodeURIComponent(`ApkaAI demo meeting\nMeeting link: ${booking.meeting_link || '(will be shared)'}`)
-  const location = encodeURIComponent(booking.meeting_link || 'Online')
+  const meetLink = booking.meeting_link || ''
+  const title    = encodeURIComponent(`ApkaAI Demo — ${booking.name || 'Guest'}`)
+  const details  = encodeURIComponent(`ApkaAI demo meeting\nMeeting link: ${meetLink || '(will be shared)'}`)
+  const location = encodeURIComponent(meetLink || 'Online')
 
-  // Google Calendar
   const gStart   = startIso.replace(/[-:]/g, '').replace('.000', '').replace('Z', 'Z')
   const gEnd     = endIso.replace(/[-:]/g, '').replace('.000', '').replace('Z', 'Z')
-  const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${gStart}/${gEnd}&details=${details}&location=${location}`
-
-  // Outlook Web
-  const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${startIso}&enddt=${endIso}&body=${details}&location=${location}`
-
-  // Office 365
+  const googleUrl    = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${gStart}/${gEnd}&details=${details}&location=${location}`
+  const outlookUrl   = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${startIso}&enddt=${endIso}&body=${details}&location=${location}`
   const office365Url = `https://outlook.office.com/calendar/0/deeplink/compose?subject=${title}&startdt=${startIso}&enddt=${endIso}&body=${details}&location=${location}`
 
-  // Apple iCal (ICS download)
   const icsContent = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//ApkaAI//Demo//EN',
-    'BEGIN:VEVENT',
-    `DTSTART:${gStart}`,
-    `DTEND:${gEnd}`,
-    `SUMMARY:ApkaAI Demo — ${booking.name}`,
-    `DESCRIPTION:ApkaAI demo meeting\\nMeeting: ${booking.meeting_link || ''}`,
-    `LOCATION:${booking.meeting_link || 'Online'}`,
-    `UID:${booking.id}@apkaai.com`,
-    'END:VEVENT',
-    'END:VCALENDAR',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//ApkaAI//Demo//EN', 'BEGIN:VEVENT',
+    `DTSTART:${gStart}`, `DTEND:${gEnd}`,
+    `SUMMARY:ApkaAI Demo — ${booking.name || 'Guest'}`,
+    `DESCRIPTION:ApkaAI demo meeting\\nMeeting: ${meetLink}`,
+    `LOCATION:${meetLink || 'Online'}`,
+    `UID:${booking.id || 'demo'}@apkaai.com`,
+    'END:VEVENT', 'END:VCALENDAR',
   ].join('\r\n')
   const icsUrl = `data:text/calendar;charset=utf8,${encodeURIComponent(icsContent)}`
 

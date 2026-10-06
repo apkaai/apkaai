@@ -199,11 +199,19 @@ async function checkAndSendReminders() {
 // ─── Send booking confirmation to attendee + host ─────────────────────────────
 
 async function sendBookingConfirmation(booking) {
+  // Guard against missing required fields
+  if (!booking || !booking.slot_date || !booking.slot_time) {
+    console.warn('[Reminder] sendBookingConfirmation: missing slot_date or slot_time')
+    return
+  }
+
   const { displayTime } = buildDateTimeRange(
     booking.slot_date, booking.slot_time,
-    booking.slot_timezone, booking.duration_minutes
+    booking.slot_timezone || 'Asia/Kolkata',
+    booking.duration_minutes || 30
   )
   const { googleUrl, outlookUrl, office365Url } = buildCalendarLinks(booking)
+  const meetLink = booking.meeting_link || ''
   const year = new Date().getFullYear()
 
   const html = `<!DOCTYPE html>
