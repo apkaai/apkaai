@@ -64,6 +64,8 @@ async function sendOrderConfirmationEmail({ userName, userEmail, orderId, items,
   }
   return result
 }
+
+function buildOrderConfirmationEmail({ userName, userEmail, orderId, items, subtotal, discount, tax, total, couponCode, paymentId }) {
   const year     = new Date().getFullYear()
   const frontendUrl = (process.env.FRONTEND_URL || 'https://apkaai.com').replace(/\/$/, '')
   const orderUrl = `${frontendUrl}/orders`
