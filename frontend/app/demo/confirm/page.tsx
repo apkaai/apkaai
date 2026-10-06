@@ -3,76 +3,94 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-  CheckCircle, Video, Calendar, ExternalLink,
-  Copy, Check, ArrowRight, Mail, Home, Clock
+  CheckCircle, Calendar, Copy, Check,
+  ArrowRight, Mail, Home, Clock
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function formatSlotLabel(hhmm: string) {
+function safeFormatTime(hhmm: string): string {
   if (!hhmm) return ''
-  const [h, m] = hhmm.replace(':00', '').split(':').map(Number)
-  if (isNaN(h)) return hhmm
-  const period = h >= 12 ? 'PM' : 'AM'
-  const h12    = h > 12 ? h - 12 : h === 0 ? 12 : h
-  return `${h12}:${(m || 0).toString().padStart(2, '0')} ${period} IST`
+  try {
+    // hhmm could be "11:00", "11:00:00", "11%3A00" (already decoded by URL)
+    const clean = hhmm.split(':').slice(0, 2).join(':') // take only HH:MM
+    const parts = clean.split(':').map(Number)
+    const h = parts[0]
+    const m = parts[1] || 0
+    if (isNaN(h)) return hhmm
+    const period = h >= 12 ? 'PM' : 'AM'
+    const h12    = h > 12 ? h - 12 : h === 0 ? 12 : h
+    return `${h12}:${m.toString().padStart(2, '0')} ${period} IST`
+  } catch { return hhmm }
 }
 
-function formatDateDisplay(ymd: string) {
+function safeFormatDate(ymd: string): string {
   if (!ymd) return ''
   try {
-    return new Date(ymd + 'T12:00:00').toLocaleDateString('en-IN', {
+    const d = new Date(ymd + 'T12:00:00')
+    if (isNaN(d.getTime())) return ymd
+    return d.toLocaleDateString('en-IN', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     })
   } catch { return ymd }
 }
 
-// ─── Add-to-calendar URLs ─────────────────────────────────────────────────────
 function buildCalLinks(date: string, time: string, meetLink: string) {
   if (!date || !time) return null
-  const cleanTime = time.replace(':00', '')
-  const [h, m]    = cleanTime.split(':').map(Number)
-  const start     = new Date(`${date}T${h.toString().padStart(2,'0')}:${(m||0).toString().padStart(2,'0')}:00+05:30`)
-  const end       = new Date(start.getTime() + 30 * 60 * 1000)
+  try {
+    // Parse HH:MM safely — ignore seconds if present
+    const timeParts = time.split(':').map(Number)
+    const h = timeParts[0] || 0
+    const m = timeParts[1] || 0
+    if (isNaN(h) || isNaN(m)) return null
 
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g,'').slice(0,15) + 'Z'
-  const title   = encodeURIComponent('ApkaAI Demo')
-  const details = encodeURIComponent(`ApkaAI demo meeting${meetLink ? `\nJoin: ${meetLink}` : ''}`)
-  const loc     = encodeURIComponent(meetLink || 'Online')
+    const hStr = h.toString().padStart(2, '0')
+    const mStr = m.toString().padStart(2, '0')
+    const start = new Date(`${date}T${hStr}:${mStr}:00+05:30`)
+    if (isNaN(start.getTime())) return null
+    const end = new Date(start.getTime() + 30 * 60 * 1000)
 
-  const googleUrl   = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}&details=${details}&location=${loc}`
-  const outlookUrl  = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`
-  const office365Url= `https://outlook.office.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`
+    const fmt = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '').slice(0, 15) + 'Z'
 
-  return { googleUrl, outlookUrl, office365Url }
+    const title   = encodeURIComponent('ApkaAI Demo')
+    const details = encodeURIComponent(`ApkaAI demo meeting${meetLink ? `\nJoin: ${meetLink}` : ''}`)
+    const loc     = encodeURIComponent(meetLink || 'Online')
+
+    return {
+      googleUrl:    `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}&details=${details}&location=${loc}`,
+      outlookUrl:   `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`,
+      office365Url: `https://outlook.office.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`,
+    }
+  } catch { return null }
 }
 
-// ─── Main content ─────────────────────────────────────────────────────────────
+// ─── Confirm content ──────────────────────────────────────────────────────────
 function ConfirmContent() {
   const params = useSearchParams()
 
-  // URL params — always available (set by demo/page.tsx on redirect)
-  const bookingId   = params.get('id')           || ''
-  const meetingLink = params.get('meeting')       || ''
-  const urlDate     = params.get('date')          || ''
-  const urlTime     = params.get('time')          || ''
-  const urlName     = params.get('name')          || ''
-  const urlEmail    = params.get('email')         || ''
+  const bookingId   = params.get('id')      || ''
+  const meetingLink = params.get('meeting') || ''
+  const urlDate     = params.get('date')    || ''
+  const urlTime     = params.get('time')    || ''
+  const urlName     = params.get('name')    || ''
+  const urlEmail    = params.get('email')   || ''
   const isFallback  = params.get('fallback') === '1'
 
-  const [bookingName,  setBookingName]  = useState(urlName)
-  const [bookingEmail, setBookingEmail] = useState(urlEmail)
   const [slotDate,     setSlotDate]     = useState(urlDate)
   const [slotTime,     setSlotTime]     = useState(urlTime)
+  const [bookingName,  setBookingName]  = useState(urlName)
+  const [bookingEmail, setBookingEmail] = useState(urlEmail)
   const [meetLink,     setMeetLink]     = useState(meetingLink)
   const [loading,      setLoading]      = useState(!!bookingId && !isFallback)
   const [copied,       setCopied]       = useState(false)
 
-  // Try to fetch booking details from API (non-blocking)
+  // Try to enrich from API (optional — not critical)
   useEffect(() => {
     if (!bookingId || isFallback) { setLoading(false); return }
-    fetch(`${API}/demo/${bookingId}`)
+    const controller = new AbortController()
+    fetch(`${API}/demo/${bookingId}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then(d => {
         if (d?.booking) {
@@ -80,30 +98,33 @@ function ConfirmContent() {
           if (b.name)         setBookingName(b.name)
           if (b.email)        setBookingEmail(b.email)
           if (b.slot_date)    setSlotDate(b.slot_date)
-          if (b.slot_time)    setSlotTime(b.slot_time)
+          if (b.slot_time)    setSlotTime(b.slot_time.slice(0, 5)) // HH:MM only
           if (b.meeting_link) setMeetLink(b.meeting_link)
         }
-        setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+    return () => controller.abort()
   }, [bookingId, isFallback])
 
   async function copyLink() {
     if (!meetLink) return
-    await navigator.clipboard.writeText(meetLink)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2500)
+    try {
+      await navigator.clipboard.writeText(meetLink)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {}
   }
 
-  // Display values — always available from URL params
-  const displayDate = formatDateDisplay(slotDate)
-  const displayTime = formatSlotLabel(slotTime)
+  // Safe derived values
+  const displayDate = safeFormatDate(slotDate)
+  const displayTime = safeFormatTime(slotTime)
   const calLinks    = buildCalLinks(slotDate, slotTime, meetLink)
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-400 animate-pulse text-sm">Loading your booking...</div>
+        <div className="text-slate-400 text-sm animate-pulse">Loading your booking...</div>
       </div>
     )
   }
@@ -120,8 +141,8 @@ function ConfirmContent() {
           <h1 className="text-3xl font-extrabold text-white mb-2">Demo Confirmed! 🎉</h1>
           <p className="text-slate-400 text-sm">
             {bookingEmail
-              ? <>A confirmation email has been sent to <span className="text-purple-300 font-semibold">{bookingEmail}</span>.</>
-              : <>Your demo has been booked. Check your email for details.</>
+              ? <>A confirmation email has been sent to{' '}<span className="text-purple-300 font-semibold">{bookingEmail}</span>.</>
+              : 'Your demo is confirmed. Check your email for details.'
             }
           </p>
         </div>
@@ -132,34 +153,31 @@ function ConfirmContent() {
             <Calendar className="w-5 h-5 text-purple-400" /> Booking Details
           </h2>
           <div className="space-y-3 text-sm">
-            {/* Date */}
-            <div className="flex justify-between items-start gap-4">
-              <span className="text-slate-400 flex-shrink-0">Date</span>
-              <span className="text-white font-semibold text-right">
-                {displayDate || <span className="text-slate-500">Confirmed</span>}
-              </span>
-            </div>
-            {/* Time */}
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Time</span>
-              <span className="text-white font-semibold flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-purple-400" />
-                {displayTime || <span className="text-slate-500">As scheduled</span>}
-              </span>
-            </div>
-            {/* Duration */}
+            {displayDate && (
+              <div className="flex justify-between items-start gap-4">
+                <span className="text-slate-400 flex-shrink-0">Date</span>
+                <span className="text-white font-semibold text-right">{displayDate}</span>
+              </div>
+            )}
+            {displayTime && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Time</span>
+                <span className="text-white font-semibold flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-purple-400" />
+                  {displayTime}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="text-slate-400">Duration</span>
               <span className="text-white">30 minutes</span>
             </div>
-            {/* Name */}
             {bookingName && (
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Name</span>
                 <span className="text-white">{bookingName}</span>
               </div>
             )}
-            {/* Booking ID */}
             {bookingId && (
               <div className="flex justify-between items-center">
                 <span className="text-slate-400">Booking ID</span>
@@ -173,11 +191,11 @@ function ConfirmContent() {
         {meetLink && (
           <div className="glow-border rounded-2xl bg-[#0F0A1E] p-6 mb-5">
             <h2 className="text-white font-bold mb-3 flex items-center gap-2">
-              <Video className="w-5 h-5 text-purple-400" /> Meeting Link
+              📹 Meeting Link
             </h2>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-950/30 border border-purple-800/30 mb-3">
               <span className="text-purple-300 text-xs font-mono flex-1 truncate">{meetLink}</span>
-              <button onClick={copyLink} className="flex-shrink-0 text-slate-400 hover:text-purple-300 transition-colors" title="Copy link">
+              <button onClick={copyLink} className="flex-shrink-0 text-slate-400 hover:text-purple-300 transition-colors" title="Copy">
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
@@ -187,8 +205,7 @@ function ConfirmContent() {
               rel="noopener noreferrer"
               className="w-full btn-primary flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl text-sm"
             >
-              <Video className="w-4 h-4" /> Join Meeting
-              <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+              Join Meeting →
             </a>
           </div>
         )}
@@ -210,7 +227,7 @@ function ConfirmContent() {
               </a>
               <a href={calLinks.office365Url} target="_blank" rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-sky-700/40 bg-sky-900/10 text-sky-300 hover:bg-sky-900/20 text-xs font-semibold transition-all">
-                📅 Office 365
+                📅 O365
               </a>
             </div>
           </div>
@@ -232,7 +249,7 @@ function ConfirmContent() {
           <ul className="space-y-2">
             {[
               '🔍 Live walkthrough of 100+ AI tools',
-              '💰 Cloud cost comparison across AWS, Azure, GCP',
+              '☁️ Cloud cost comparison across AWS, Azure, GCP',
               '🛒 How to add tools to cart and manage subscriptions',
               '❓ Q&A session tailored to your use case',
             ].map(item => (
@@ -265,7 +282,7 @@ export default function ConfirmPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-400 animate-pulse">Loading...</div>
+        <div className="text-slate-400 animate-pulse text-sm">Loading...</div>
       </div>
     }>
       <ConfirmContent />
