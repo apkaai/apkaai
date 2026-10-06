@@ -24,15 +24,24 @@ const { DateTime } = require('luxon')   // safe timezone handling
  * Convert slot date + time + timezone to ISO strings for calendar APIs
  */
 function buildDateTimeRange(slotDate, slotTime, timezone, durationMinutes = 30) {
-  // slot_date: "2026-10-15", slot_time: "14:30:00"
-  const startDt = DateTime.fromISO(`${slotDate}T${slotTime}`, { zone: timezone })
-  const endDt   = startDt.plus({ minutes: durationMinutes })
+  // slot_date: "2026-10-15", slot_time: "14:30:00" or "14:00"
+  const tz = timezone || 'Asia/Kolkata'
+  // Normalize time to HH:MM:SS format
+  const timeStr = (slotTime || '10:00:00').replace(/^(\d{2}:\d{2})$/, '$1:00')
+  const startDt = DateTime.fromISO(`${slotDate}T${timeStr}`, { zone: tz })
+
+  // If invalid, fall back to UTC
+  const validStart = startDt.isValid ? startDt : DateTime.fromISO(`${slotDate}T${timeStr}`, { zone: 'UTC' })
+  const endDt      = validStart.plus({ minutes: durationMinutes })
+
   return {
-    startIso: startDt.toISO(),
-    endIso:   endDt.toISO(),
-    startUtc: startDt.toUTC().toISO(),
-    endUtc:   endDt.toUTC().toISO(),
-    displayTime: startDt.toFormat('cccc, LLLL d yyyy, h:mm a ZZZZ'),
+    startIso:    validStart.toISO()   || new Date().toISOString(),
+    endIso:      endDt.toISO()        || new Date().toISOString(),
+    startUtc:    validStart.toUTC().toISO() || new Date().toISOString(),
+    endUtc:      endDt.toUTC().toISO()     || new Date().toISOString(),
+    displayTime: validStart.isValid
+      ? validStart.toFormat('cccc, LLLL d yyyy, h:mm a ZZZZ')
+      : `${slotDate} at ${timeStr} ${tz}`,
   }
 }
 
