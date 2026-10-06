@@ -19,13 +19,14 @@ const reviewsRouter    = require('./routes/reviews')
 const referralRouter   = require('./routes/referral')
 const newsletterRouter = require('./routes/newsletter')
 const invoicesRouter   = require('./routes/invoices')
-const demoRouter       = require('./routes/demo')
 
-// ── Optional routes (skip if deps missing) ────────────────────────────────────
+// ── Optional routes (skip if deps/files missing) ──────────────────────────────
 let cloudRouter    = null
 let datalakeRouter = null
+let demoRouter     = null
 try { cloudRouter    = require('./routes/cloud')    } catch (e) { console.warn('[boot] cloud unavailable:', e.message)    }
 try { datalakeRouter = require('./routes/datalake') } catch (e) { console.warn('[boot] datalake unavailable:', e.message) }
+try { demoRouter     = require('./routes/demo')     } catch (e) { console.warn('[boot] demo unavailable:', e.message)     }
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -83,8 +84,8 @@ app.use('/api/reviews',    reviewsRouter)
 app.use('/api/referral',   referralRouter)
 app.use('/api/newsletter', newsletterRouter)
 app.use('/api/invoices',   invoicesRouter)
-app.use('/api/demo',       demoRouter)
 
+if (demoRouter)     app.use('/api/demo',     demoRouter)
 if (cloudRouter)    app.use('/api/cloud',    cloudRouter)
 if (datalakeRouter) app.use('/api/datalake', datalakeRouter)
 
@@ -105,16 +106,17 @@ app.use((err, req, res, _next) => {
 app.listen(PORT, () => {
   console.log(`✅ ApkaAI API running on http://localhost:${PORT}`)
   console.log(`   Environment : ${process.env.NODE_ENV || 'development'}`)
+  console.log(`   AWS Region  : ${process.env.AWS_REGION || 'ap-south-1'}`)
+  if (datalakeRouter) console.log(`   Datalake    : /api/datalake (mounted)`)
+  if (demoRouter)     console.log(`   Demo        : /api/demo (mounted)`)
 
-  // Start demo reminder scheduler (checks every 15 min)
+  // Start demo reminder scheduler if available
   try {
     const { startReminderScheduler } = require('./services/reminderService')
     startReminderScheduler()
   } catch (e) {
     console.warn('[Startup] Reminder scheduler not started:', e.message)
   }
-})
-  console.log(`   AWS Region  : ${process.env.AWS_REGION || 'ap-south-1'}`)
 })
 
 module.exports = app
