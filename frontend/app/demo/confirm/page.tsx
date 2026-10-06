@@ -4,119 +4,172 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   CheckCircle, Video, Calendar, ExternalLink,
-  Copy, Check, ArrowRight, Mail, Home
+  Copy, Check, ArrowRight, Mail, Home, Clock
 } from 'lucide-react'
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
 
-interface Booking {
-  id: string
-  name: string
-  email: string
-  company?: string
-  slot_date: string
-  slot_time: string
-  slot_timezone: string
-  duration_minutes: number
-  status: string
-  meeting_link?: string
-  calendarLinks?: {
-    googleUrl:    string
-    outlookUrl:   string
-    office365Url: string
-    icsUrl:       string
-    displayTime:  string
-  }
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatSlotLabel(hhmm: string) {
+  if (!hhmm) return ''
+  const [h, m] = hhmm.replace(':00', '').split(':').map(Number)
+  if (isNaN(h)) return hhmm
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12    = h > 12 ? h - 12 : h === 0 ? 12 : h
+  return `${h12}:${(m || 0).toString().padStart(2, '0')} ${period} IST`
 }
 
+function formatDateDisplay(ymd: string) {
+  if (!ymd) return ''
+  try {
+    return new Date(ymd + 'T12:00:00').toLocaleDateString('en-IN', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    })
+  } catch { return ymd }
+}
+
+// ─── Add-to-calendar URLs ─────────────────────────────────────────────────────
+function buildCalLinks(date: string, time: string, meetLink: string) {
+  if (!date || !time) return null
+  const cleanTime = time.replace(':00', '')
+  const [h, m]    = cleanTime.split(':').map(Number)
+  const start     = new Date(`${date}T${h.toString().padStart(2,'0')}:${(m||0).toString().padStart(2,'0')}:00+05:30`)
+  const end       = new Date(start.getTime() + 30 * 60 * 1000)
+
+  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g,'').slice(0,15) + 'Z'
+  const title   = encodeURIComponent('ApkaAI Demo')
+  const details = encodeURIComponent(`ApkaAI demo meeting${meetLink ? `\nJoin: ${meetLink}` : ''}`)
+  const loc     = encodeURIComponent(meetLink || 'Online')
+
+  const googleUrl   = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${fmt(start)}/${fmt(end)}&details=${details}&location=${loc}`
+  const outlookUrl  = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`
+  const office365Url= `https://outlook.office.com/calendar/0/deeplink/compose?subject=${title}&startdt=${start.toISOString()}&enddt=${end.toISOString()}&body=${details}&location=${loc}`
+
+  return { googleUrl, outlookUrl, office365Url }
+}
+
+// ─── Main content ─────────────────────────────────────────────────────────────
 function ConfirmContent() {
-  const params      = useSearchParams()
-  const bookingId   = params.get('id')
-  const meetingLink = params.get('meeting') || ''
+  const params = useSearchParams()
 
-  const [booking, setBooking] = useState<Booking | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [copied,  setCopied]  = useState(false)
+  // URL params — always available (set by demo/page.tsx on redirect)
+  const bookingId   = params.get('id')           || ''
+  const meetingLink = params.get('meeting')       || ''
+  const urlDate     = params.get('date')          || ''
+  const urlTime     = params.get('time')          || ''
+  const urlName     = params.get('name')          || ''
+  const urlEmail    = params.get('email')         || ''
+  const isFallback  = params.get('fallback') === '1'
 
+  const [bookingName,  setBookingName]  = useState(urlName)
+  const [bookingEmail, setBookingEmail] = useState(urlEmail)
+  const [slotDate,     setSlotDate]     = useState(urlDate)
+  const [slotTime,     setSlotTime]     = useState(urlTime)
+  const [meetLink,     setMeetLink]     = useState(meetingLink)
+  const [loading,      setLoading]      = useState(!!bookingId && !isFallback)
+  const [copied,       setCopied]       = useState(false)
+
+  // Try to fetch booking details from API (non-blocking)
   useEffect(() => {
-    if (!bookingId) { setLoading(false); return }
+    if (!bookingId || isFallback) { setLoading(false); return }
     fetch(`${API}/demo/${bookingId}`)
       .then(r => r.ok ? r.json() : null)
-      .then(d => { setBooking(d?.booking || null); setLoading(false) })
+      .then(d => {
+        if (d?.booking) {
+          const b = d.booking
+          if (b.name)         setBookingName(b.name)
+          if (b.email)        setBookingEmail(b.email)
+          if (b.slot_date)    setSlotDate(b.slot_date)
+          if (b.slot_time)    setSlotTime(b.slot_time)
+          if (b.meeting_link) setMeetLink(b.meeting_link)
+        }
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
-  }, [bookingId])
+  }, [bookingId, isFallback])
 
   async function copyLink() {
-    const link = meetingLink || booking?.meeting_link || ''
-    if (!link) return
-    await navigator.clipboard.writeText(link)
+    if (!meetLink) return
+    await navigator.clipboard.writeText(meetLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2500)
   }
 
+  // Display values — always available from URL params
+  const displayDate = formatDateDisplay(slotDate)
+  const displayTime = formatSlotLabel(slotTime)
+  const calLinks    = buildCalLinks(slotDate, slotTime, meetLink)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-400 animate-pulse">Loading confirmation...</div>
+        <div className="text-slate-400 animate-pulse text-sm">Loading your booking...</div>
       </div>
     )
   }
-
-  const meetLink    = meetingLink || booking?.meeting_link || ''
-  const displayTime = booking?.calendarLinks?.displayTime || `${booking?.slot_date} at ${booking?.slot_time}`
-  const cal         = booking?.calendarLinks
 
   return (
     <div className="min-h-screen pt-20 pb-24 px-4">
       <div className="max-w-lg mx-auto pt-8">
 
-        {/* Success icon */}
+        {/* Success header */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 rounded-3xl bg-emerald-900/20 border border-emerald-700/30 flex items-center justify-center mx-auto mb-5">
             <CheckCircle className="w-10 h-10 text-emerald-400" />
           </div>
           <h1 className="text-3xl font-extrabold text-white mb-2">Demo Confirmed! 🎉</h1>
-          <p className="text-slate-400">
-            A confirmation email with the meeting link has been sent to{' '}
-            <span className="text-purple-300 font-semibold">{booking?.email || 'your email'}</span>.
+          <p className="text-slate-400 text-sm">
+            {bookingEmail
+              ? <>A confirmation email has been sent to <span className="text-purple-300 font-semibold">{bookingEmail}</span>.</>
+              : <>Your demo has been booked. Check your email for details.</>
+            }
           </p>
         </div>
 
-        {/* Booking details card */}
+        {/* Booking details */}
         <div className="glow-border rounded-2xl bg-[#0F0A1E] p-6 mb-5">
           <h2 className="text-white font-bold mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-purple-400" /> Booking Details
           </h2>
-
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Date & Time</span>
-              <span className="text-white font-semibold text-right max-w-[60%]">{displayTime}</span>
+            {/* Date */}
+            <div className="flex justify-between items-start gap-4">
+              <span className="text-slate-400 flex-shrink-0">Date</span>
+              <span className="text-white font-semibold text-right">
+                {displayDate || <span className="text-slate-500">Confirmed</span>}
+              </span>
             </div>
-            <div className="flex justify-between">
+            {/* Time */}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Time</span>
+              <span className="text-white font-semibold flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-purple-400" />
+                {displayTime || <span className="text-slate-500">As scheduled</span>}
+              </span>
+            </div>
+            {/* Duration */}
+            <div className="flex justify-between items-center">
               <span className="text-slate-400">Duration</span>
-              <span className="text-white">{booking?.duration_minutes || 30} minutes</span>
+              <span className="text-white">30 minutes</span>
             </div>
-            {booking?.name && (
-              <div className="flex justify-between">
+            {/* Name */}
+            {bookingName && (
+              <div className="flex justify-between items-center">
                 <span className="text-slate-400">Name</span>
-                <span className="text-white">{booking.name}</span>
+                <span className="text-white">{bookingName}</span>
               </div>
             )}
-            {booking?.company && (
-              <div className="flex justify-between">
-                <span className="text-slate-400">Company</span>
-                <span className="text-white">{booking.company}</span>
+            {/* Booking ID */}
+            {bookingId && (
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Booking ID</span>
+                <span className="text-purple-300 font-mono text-xs">{bookingId.slice(0, 8).toUpperCase()}</span>
               </div>
             )}
-            <div className="flex justify-between">
-              <span className="text-slate-400">Booking ID</span>
-              <span className="text-purple-300 font-mono text-xs">{bookingId?.slice(0, 8).toUpperCase()}</span>
-            </div>
           </div>
         </div>
 
-        {/* Meeting link card */}
+        {/* Meeting link */}
         {meetLink && (
           <div className="glow-border rounded-2xl bg-[#0F0A1E] p-6 mb-5">
             <h2 className="text-white font-bold mb-3 flex items-center gap-2">
@@ -124,7 +177,7 @@ function ConfirmContent() {
             </h2>
             <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-950/30 border border-purple-800/30 mb-3">
               <span className="text-purple-300 text-xs font-mono flex-1 truncate">{meetLink}</span>
-              <button onClick={copyLink} className="flex-shrink-0 text-slate-400 hover:text-purple-300 transition-colors">
+              <button onClick={copyLink} className="flex-shrink-0 text-slate-400 hover:text-purple-300 transition-colors" title="Copy link">
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
@@ -141,42 +194,23 @@ function ConfirmContent() {
         )}
 
         {/* Add to calendar */}
-        {cal && (
+        {calLinks && (
           <div className="glow-border rounded-2xl bg-[#0F0A1E] p-6 mb-5">
             <h2 className="text-white font-bold mb-3 flex items-center gap-2">
               <Calendar className="w-5 h-5 text-purple-400" /> Add to Calendar
             </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <a
-                href={cal.googleUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-blue-700/40 bg-blue-900/10 text-blue-300 hover:bg-blue-900/20 text-sm font-semibold transition-all"
-              >
-                📅 Google Calendar
+            <div className="grid grid-cols-3 gap-3">
+              <a href={calLinks.googleUrl} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-blue-700/40 bg-blue-900/10 text-blue-300 hover:bg-blue-900/20 text-xs font-semibold transition-all">
+                📅 Google
               </a>
-              <a
-                href={cal.outlookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-sky-700/40 bg-sky-900/10 text-sky-300 hover:bg-sky-900/20 text-sm font-semibold transition-all"
-              >
+              <a href={calLinks.outlookUrl} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-sky-700/40 bg-sky-900/10 text-sky-300 hover:bg-sky-900/20 text-xs font-semibold transition-all">
                 📅 Outlook
               </a>
-              <a
-                href={cal.office365Url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-sky-700/40 bg-sky-900/10 text-sky-300 hover:bg-sky-900/20 text-sm font-semibold transition-all"
-              >
+              <a href={calLinks.office365Url} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 p-3 rounded-xl border border-sky-700/40 bg-sky-900/10 text-sky-300 hover:bg-sky-900/20 text-xs font-semibold transition-all">
                 📅 Office 365
-              </a>
-              <a
-                href={cal.icsUrl}
-                download="apkaai-demo.ics"
-                className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-700/40 bg-slate-800/20 text-slate-300 hover:bg-slate-700/20 text-sm font-semibold transition-all"
-              >
-                🍎 Apple Calendar
               </a>
             </div>
           </div>
@@ -186,23 +220,38 @@ function ConfirmContent() {
         <div className="flex items-start gap-3 p-4 rounded-xl bg-purple-950/20 border border-purple-900/30 mb-6">
           <Mail className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
           <p className="text-slate-400 text-sm">
-            You&apos;ll receive automatic reminders <strong className="text-white">24 hours</strong> and{' '}
+            You&apos;ll receive automatic reminders{' '}
+            <strong className="text-white">24 hours</strong> and{' '}
             <strong className="text-white">1 hour</strong> before the demo via email.
           </p>
         </div>
 
+        {/* What to expect */}
+        <div className="glow-border rounded-2xl bg-[#0F0A1E] p-5 mb-6">
+          <h3 className="text-white font-semibold text-sm mb-3">What to expect in your demo</h3>
+          <ul className="space-y-2">
+            {[
+              '🔍 Live walkthrough of 100+ AI tools',
+              '💰 Cloud cost comparison across AWS, Azure, GCP',
+              '🛒 How to add tools to cart and manage subscriptions',
+              '❓ Q&A session tailored to your use case',
+            ].map(item => (
+              <li key={item} className="text-slate-400 text-xs flex items-start gap-2">
+                <span className="flex-shrink-0">{item.slice(0, 2)}</span>
+                {item.slice(2)}
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <Link
-            href="/"
-            className="flex-1 flex items-center justify-center gap-2 border border-purple-700/40 hover:border-purple-500 text-slate-300 hover:text-white font-semibold py-3 rounded-xl text-sm transition-all"
-          >
+          <Link href="/"
+            className="flex-1 flex items-center justify-center gap-2 border border-purple-700/40 hover:border-purple-500 text-slate-300 hover:text-white font-semibold py-3 rounded-xl text-sm transition-all">
             <Home className="w-4 h-4" /> Back to Home
           </Link>
-          <Link
-            href="/tools"
-            className="flex-1 flex items-center justify-center gap-2 btn-primary text-white font-bold py-3 rounded-xl text-sm"
-          >
+          <Link href="/tools"
+            className="flex-1 flex items-center justify-center gap-2 btn-primary text-white font-bold py-3 rounded-xl text-sm">
             Explore AI Tools <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
