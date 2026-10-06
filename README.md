@@ -263,3 +263,37 @@ JWT_SECRET=your_jwt_secret_here
 ---
 
 Built with ❤️ for the World 🌍 | [apkaai.com](https://apkaai.com)
+
+
+---
+
+## 🤖 GitHub Actions Auto-Deploy
+
+Every push to `main` automatically deploys to EC2 via `.github/workflows/deploy.yml`.
+
+### Required GitHub Secrets
+
+Go to: **GitHub → Settings → Secrets and variables → Actions → New repository secret**
+
+| Secret | Value |
+|--------|-------|
+| `EC2_HOST` | `3.6.107.51` |
+| `EC2_USER` | `ec2-user` |
+| `EC2_SSH_KEY` | Contents of `deploy/apkaai-key.pem` (the full private key) |
+
+### How to add the SSH key secret
+
+```bash
+# Copy the key contents to clipboard (Windows)
+Get-Content deploy/apkaai-key.pem | Set-Clipboard
+
+# Then paste into GitHub Secrets as EC2_SSH_KEY
+```
+
+Once set, every `git push origin main` will automatically:
+1. Pull latest code on EC2
+2. Run DB migrations
+3. Install packages
+4. Build frontend
+5. Restart PM2 processes
+6. Run health checks

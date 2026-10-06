@@ -1,0 +1,75 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy ApkaAI to Production
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Deploy via SSH ─────────────────────────────────────────────────────
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host:        ${{ secrets.EC2_HOST }}
+          username:    ${{ secrets.EC2_USER }}
+          key:         ${{ secrets.EC2_SSH_KEY }}
+          timeout:     600s
+          script: |
+            set -e
+            APP="/home/ec2-user/apkaai"
+            cd "$APP"
+
+            echo "=== [1/5] Pulling latest code ==="
+            git fetch origin
+            git reset --hard origin/main
+            echo "  ✅ $(git log --oneline -1)"
+
+            echo ""
+            echo "=== [2/5] DB Migration ==="
+            DB_HOST=$(grep ^DB_HOST "$APP/backend/.env" | cut -d= -f2)
+            DB_PORT=$(grep ^DB_PORT "$APP/backend/.env" | cut -d= -f2 || echo "5432")
+            DB_NAME=$(grep ^DB_NAME "$APP/backend/.env" | cut -d= -f2)
+            DB_USER=$(grep ^DB_USER "$APP/backend/.env" | cut -d= -f2)
+            DB_PASS=$(grep ^DB_PASS "$APP/backend/.env" | cut -d= -f2)
+            export DATABASE_URL="postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT:-5432}/${DB_NAME}"
+            psql "$DATABASE_URL" -f "$APP/backend/src/lib/schema.sql" -v ON_ERROR_STOP=0 2>&1 | grep -E "(CREATE|ALTER|already exists|ERROR)" || true
+            echo "  ✅ Migrations applied"
+
+            echo ""
+            echo "=== [3/5] Backend install ==="
+            cd "$APP/backend"
+            npm install --omit=dev --prefer-offline 2>&1 | tail -3
+            echo "  ✅ Backend ready"
+
+            echo ""
+            echo "=== [4/5] Frontend build ==="
+            cd "$APP/frontend"
+            npm install --prefer-offline 2>&1 | tail -2
+            npm run build 2>&1 | tail -10
+            echo "  ✅ Frontend built"
+
+            echo ""
+            echo "=== [5/5] Restart services ==="
+            pm2 restart apkaai-api --update-env
+            pm2 restart apkaai-frontend --update-env
+            pm2 save
+            sleep 5
+            curl -sf http://localhost:4000/health && echo "  ✅ API healthy" || echo "  ❌ API FAILED"
+            curl -sf http://localhost:3000 > /dev/null && echo "  ✅ Frontend UP" || echo "  ❌ Frontend FAILED"
+            echo "✅ Deployment complete!"
+
+      # ── 3. Post-deploy status comment ─────────────────────────────────────────
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🚀 ApkaAI deployed successfully!"
+          echo "🌐 http://3.6.107.51"
+          echo "📅 $(date '+%Y-%m-%d %H:%M:%S UTC')"

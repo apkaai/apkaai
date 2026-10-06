@@ -6,11 +6,18 @@ import {
   Users, Mail, BarChart3, Database, LogOut, Shield,
   TrendingUp, Search, RefreshCw, Download, Eye, ChevronRight,
   ShoppingBag, Package, CheckCircle, XCircle, Clock, RotateCcw,
-  IndianRupee, ChevronDown, ChevronUp, ExternalLink, Activity, Zap, HardDrive
+  IndianRupee, ChevronDown, ChevronUp, ExternalLink, Activity, Zap, HardDrive, Calendar, Video, PhoneCall
 } from 'lucide-react'
 
 interface User    { user_id: string; name: string; email: string; role: string; created_at: string }
 interface Contact { id: string; name: string; email: string; subject: string; message: string; status: string; created_at: string }
+
+interface DemoBooking {
+  id: string; name: string; email: string; company: string; phone: string;
+  slot_date: string; slot_time: string; slot_timezone: string; duration_minutes: number;
+  status: string; meeting_link: string; calendar_type: string; use_case: string; created_at: string;
+}
+interface DemoStats { total: string; confirmed: string; completed: string; cancelled: string; pending: string }
 
 type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled' | 'refunded'
 
@@ -180,6 +187,12 @@ export default function AdminDashboard() {
   const [driveLoading, setDriveLoading] = useState(false)
   const [newsletterCount, setNewsletterCount] = useState(0)
 
+  // Demo bookings state
+  const [demos, setDemos] = useState<DemoBooking[]>([])
+  const [demoStats, setDemoStats] = useState<DemoStats | null>(null)
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoStatusFilter, setDemoStatusFilter] = useState('')
+
   const token = typeof window !== 'undefined' ? (localStorage.getItem('apkaai_token') || sessionStorage.getItem('apkaai_token') || '') : ''
   const API   = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'
 
@@ -219,6 +232,27 @@ export default function AdminDashboard() {
     setDriveLoading(false)
   }
 
+  const fetchDemos = async () => {
+    setDemoLoading(true)
+    try {
+      const params = demoStatusFilter ? `?status=${demoStatusFilter}&limit=50` : '?limit=50'
+      const r = await fetch(`/api/demo${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      const d = await r.json()
+      setDemos(d.bookings || [])
+      setDemoStats(d.stats || null)
+    } catch {}
+    setDemoLoading(false)
+  }
+
+  const updateDemoStatus = async (id: string, status: string) => {
+    await fetch(`/api/demo/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    })
+    fetchDemos()
+  }
+
   const fetchOrders = async () => {
     setOrdersLoading(true)
     try {
@@ -241,6 +275,7 @@ export default function AdminDashboard() {
     if (tab === 'users' || tab === 'overview') fetchUsers()
     if (tab === 'contacts') fetchContacts()
     if (tab === 'orders') fetchOrders()
+    if (tab === 'demos') fetchDemos()
     if (tab === 'datalake') { fetchUsers(); fetchContacts(); fetchDriveFiles() }
   }, [tab])
 
@@ -256,11 +291,12 @@ export default function AdminDashboard() {
   }
 
   const tabs = [
-    { id: 'overview', label: 'Overview',  icon: BarChart3 },
-    { id: 'users',    label: 'Users',     icon: Users },
-    { id: 'contacts', label: 'Contacts',  icon: Mail },
-    { id: 'orders',   label: 'Orders',    icon: ShoppingBag },
-    { id: 'datalake', label: 'Data Lake', icon: Database },
+    { id: 'overview',   label: 'Overview',   icon: BarChart3 },
+    { id: 'users',      label: 'Users',      icon: Users },
+    { id: 'contacts',   label: 'Contacts',   icon: Mail },
+    { id: 'orders',     label: 'Orders',     icon: ShoppingBag },
+    { id: 'demos',      label: 'Demo Bookings', icon: Calendar },
+    { id: 'datalake',   label: 'Data Lake',  icon: Database },
     { id: 'monitoring',         label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring' },
     { id: 'monitoring-grafana', label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' },
   ] as const
@@ -596,6 +632,139 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* ── DEMO BOOKINGS ─────────────────────────────────────────────── */}
+          {tab === 'demos' && (
+            <div className="space-y-5">
+              {/* Stats */}
+              {demoStats && (
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {[
+                    { label: 'Total',     value: parseInt(demoStats.total),     color: 'text-purple-400' },
+                    { label: 'Confirmed', value: parseInt(demoStats.confirmed), color: 'text-blue-400' },
+                    { label: 'Pending',   value: parseInt(demoStats.pending),   color: 'text-yellow-400' },
+                    { label: 'Completed', value: parseInt(demoStats.completed), color: 'text-emerald-400' },
+                    { label: 'Cancelled', value: parseInt(demoStats.cancelled), color: 'text-red-400' },
+                  ].map(s => (
+                    <div key={s.label} className="glow-border rounded-xl p-4 bg-[#0F0A1E] text-center">
+                      <div className={`text-2xl font-extrabold ${s.color}`}>{s.value}</div>
+                      <div className="text-slate-400 text-xs mt-0.5">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Table */}
+              <div className="glow-border rounded-2xl bg-[#0F0A1E] overflow-hidden">
+                <div className="flex items-center justify-between p-5 border-b border-purple-900/30 flex-wrap gap-3">
+                  <h2 className="font-bold text-white flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-purple-400" />
+                    Demo Bookings ({demos.length})
+                  </h2>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <select
+                      value={demoStatusFilter}
+                      onChange={e => { setDemoStatusFilter(e.target.value); setTimeout(fetchDemos, 0) }}
+                      className="bg-purple-950/40 border border-purple-800/40 text-white text-xs rounded-lg px-3 py-2 focus:outline-none"
+                    >
+                      <option value="">All Statuses</option>
+                      {['pending','confirmed','completed','cancelled','no_show'].map(s => (
+                        <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ')}</option>
+                      ))}
+                    </select>
+                    <button onClick={fetchDemos} disabled={demoLoading}
+                      className="p-2 text-slate-400 hover:text-white border border-purple-800/40 rounded-lg hover:border-purple-500 transition-all">
+                      <RefreshCw className={`w-4 h-4 ${demoLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                    <button
+                      onClick={() => exportCSV(demos.map(d => ({ id: d.id.slice(0,8), name: d.name, email: d.email, company: d.company, date: d.slot_date, time: d.slot_time, status: d.status, meeting: d.meeting_link })), 'apkaai-demos.csv')}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
+                    >
+                      <Download className="w-4 h-4" /> Export
+                    </button>
+                  </div>
+                </div>
+
+                {demoLoading ? (
+                  <div className="py-12 text-center text-slate-500 flex items-center justify-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Loading demos...
+                  </div>
+                ) : demos.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <Calendar className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                    <p className="text-slate-400">No demo bookings yet</p>
+                    <a href="/demo" target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-purple-400 hover:text-purple-300 text-sm mt-3 transition-colors">
+                      View booking page <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-purple-950/20">
+                          {['Name', 'Email', 'Company', 'Date', 'Time', 'Meeting', 'Status', 'Action'].map(h => (
+                            <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-purple-900/20">
+                        {demos.map(demo => (
+                          <tr key={demo.id} className="hover:bg-purple-950/10 transition-colors">
+                            <td className="px-4 py-3 text-white text-sm font-medium">{demo.name}</td>
+                            <td className="px-4 py-3 text-slate-300 text-sm">{demo.email}</td>
+                            <td className="px-4 py-3 text-slate-400 text-sm">{demo.company || '—'}</td>
+                            <td className="px-4 py-3 text-slate-300 text-sm">{new Date(demo.slot_date).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}</td>
+                            <td className="px-4 py-3 text-slate-300 text-sm">{demo.slot_time?.slice(0,5)}</td>
+                            <td className="px-4 py-3">
+                              {demo.meeting_link ? (
+                                <a href={demo.meeting_link} target="_blank" rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-purple-400 hover:text-purple-300 text-xs">
+                                  <Video className="w-3.5 h-3.5" /> Join
+                                </a>
+                              ) : <span className="text-slate-600 text-xs">No link</span>}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                                demo.status === 'confirmed'  ? 'bg-blue-900/40 text-blue-300' :
+                                demo.status === 'completed'  ? 'bg-emerald-900/40 text-emerald-300' :
+                                demo.status === 'cancelled'  ? 'bg-red-900/40 text-red-300' :
+                                demo.status === 'no_show'    ? 'bg-slate-700/40 text-slate-400' :
+                                'bg-yellow-900/40 text-yellow-300'
+                              }`}>
+                                {demo.status.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <select
+                                value={demo.status}
+                                onChange={e => updateDemoStatus(demo.id, e.target.value)}
+                                className="bg-purple-950/40 border border-purple-800/40 text-white text-xs rounded-lg px-2 py-1.5 focus:outline-none"
+                              >
+                                {['pending','confirmed','completed','cancelled','no_show'].map(s => (
+                                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Book a Demo CTA for admin */}
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-purple-950/20 border border-purple-900/30">
+                <PhoneCall className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                <p className="text-slate-400 text-sm flex-1">Share the demo booking page with prospects</p>
+                <a href="/demo" target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors">
+                  apkaai.com/demo <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
           )}
