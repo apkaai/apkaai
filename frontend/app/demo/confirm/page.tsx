@@ -28,7 +28,9 @@ function safeFormatTime(hhmm: string): string {
 function safeFormatDate(ymd: string): string {
   if (!ymd) return ''
   try {
-    const d = new Date(ymd + 'T12:00:00')
+    // Handle both "2026-10-13" and "2026-10-13T00:00:00.000Z" formats
+    const clean = ymd.includes('T') ? ymd.split('T')[0] : ymd
+    const d = new Date(clean + 'T12:00:00')
     if (isNaN(d.getTime())) return ymd
     return d.toLocaleDateString('en-IN', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',

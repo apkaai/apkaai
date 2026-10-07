@@ -186,6 +186,13 @@ export default function AdminDashboard() {
   const [driveFiles, setDriveFiles] = useState<{ name: string; type: string; modified: string; size: string; link: string }[]>([])
   const [driveLoading, setDriveLoading] = useState(false)
   const [newsletterCount, setNewsletterCount] = useState(0)
+  const [newsletterSubs, setNewsletterSubs]   = useState<{id:string;email:string;name:string;status:string;created_at:string}[]>([])
+  const [campaignSubject, setCampaignSubject] = useState('')
+  const [campaignBody, setCampaignBody]       = useState('')
+  const [campaignPreview, setCampaignPreview] = useState('')
+  const [campaignTest, setCampaignTest]       = useState('')
+  const [campaignSending, setCampaignSending] = useState(false)
+  const [campaignResult, setCampaignResult]   = useState<{success:boolean;message:string;sent?:number;failed?:number} | null>(null)
 
   // Demo bookings state
   const [demos, setDemos] = useState<DemoBooking[]>([])
@@ -208,6 +215,8 @@ export default function AdminDashboard() {
       const r = await fetch('/api/newsletter/subscribers', { headers: { Authorization: `Bearer ${token}` } })
       const d = await r.json()
       setNewsletterCount(d.active || 0)
+      setNewsletterSubs(d.subscribers || [])
+    } catch {}
     } catch {}
     setLoading(false)
   }
@@ -276,6 +285,7 @@ export default function AdminDashboard() {
     if (tab === 'contacts') fetchContacts()
     if (tab === 'orders') fetchOrders()
     if (tab === 'demos') fetchDemos()
+    if (tab === 'newsletter') fetchUsers() // fetchUsers also loads newsletter subs
     if (tab === 'datalake') { fetchUsers(); fetchContacts(); fetchDriveFiles() }
   }, [tab])
 
@@ -296,6 +306,7 @@ export default function AdminDashboard() {
     { id: 'contacts',   label: 'Contacts',   icon: Mail },
     { id: 'orders',     label: 'Orders',     icon: ShoppingBag },
     { id: 'demos',      label: 'Demo Bookings', icon: Calendar },
+    { id: 'newsletter', label: 'Newsletter',  icon: Mail },
     { id: 'datalake',   label: 'Data Lake',  icon: Database },
     { id: 'monitoring',         label: 'Monitoring',            icon: Activity,  href: '/admin/monitoring' },
     { id: 'monitoring-grafana', label: 'Monitoring in Grafana', icon: BarChart3, href: '/admin/monitoring-grafana' },
@@ -765,6 +776,153 @@ export default function AdminDashboard() {
                   className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 text-sm font-semibold transition-colors">
                   apkaai.com/demo <ExternalLink className="w-3.5 h-3.5" />
                 </a>
+              </div>
+            </div>
+          )}
+
+          {/* ── NEWSLETTER ─────────────────────────────────────────────────── */}
+          {tab === 'newsletter' && (
+            <div className="space-y-6">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { label: 'Active Subscribers', value: newsletterSubs.filter(s=>s.status==='active').length,       color: 'text-emerald-400' },
+                  { label: 'Total Subscribers',  value: newsletterSubs.length,                                      color: 'text-purple-400' },
+                  { label: 'Unsubscribed',        value: newsletterSubs.filter(s=>s.status==='unsubscribed').length, color: 'text-slate-400' },
+                ].map(s => (
+                  <div key={s.label} className="glow-border rounded-xl p-5 bg-[#0F0A1E]">
+                    <div className={`text-2xl font-extrabold ${s.color}`}>{s.value}</div>
+                    <div className="text-slate-400 text-sm mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Send Campaign */}
+              <div className="glow-border rounded-2xl bg-[#0F0A1E] p-6">
+                <h2 className="text-white font-bold text-base mb-5 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-purple-400" /> Send Email Campaign
+                </h2>
+
+                {campaignResult && (
+                  <div className={`flex items-center gap-3 p-3 rounded-xl mb-4 text-sm ${campaignResult.success ? 'bg-emerald-900/20 border border-emerald-700/30 text-emerald-400' : 'bg-red-900/20 border border-red-700/30 text-red-400'}`}>
+                    {campaignResult.success ? '✅' : '❌'} {campaignResult.message}
+                    {campaignResult.sent !== undefined && <span className="ml-auto text-xs">Sent: {campaignResult.sent} | Failed: {campaignResult.failed}</span>}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs text-slate-400 font-medium mb-1.5 block">Subject Line *</label>
+                    <input
+                      value={campaignSubject}
+                      onChange={e => setCampaignSubject(e.target.value)}
+                      placeholder="🚀 Top 5 New AI Tools This Week — ApkaAI"
+                      className="w-full bg-purple-950/40 border border-purple-800/40 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 font-medium mb-1.5 block">Preview Text (shown in inbox)</label>
+                    <input
+                      value={campaignPreview}
+                      onChange={e => setCampaignPreview(e.target.value)}
+                      placeholder="Discover the latest AI tools added this week..."
+                      className="w-full bg-purple-950/40 border border-purple-800/40 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 font-medium mb-1.5 block">Email Body (HTML supported) *</label>
+                    <textarea
+                      value={campaignBody}
+                      onChange={e => setCampaignBody(e.target.value)}
+                      placeholder={`<h2 style="color:#fff;">This week's top AI tools 🚀</h2>\n<p style="color:#94A3B8;">We've added 5 new AI tools to ApkaAI this week...</p>`}
+                      rows={8}
+                      className="w-full bg-purple-950/40 border border-purple-800/40 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition resize-none font-mono"
+                    />
+                    <p className="text-slate-600 text-xs mt-1">HTML is supported. Your content will be wrapped in the ApkaAI branded email template.</p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-slate-400 font-medium mb-1.5 block">Test Email (send to single address first)</label>
+                    <input
+                      value={campaignTest}
+                      onChange={e => setCampaignTest(e.target.value)}
+                      placeholder="ashutoshkumarpandey@apkaai.com"
+                      type="email"
+                      className="w-full bg-purple-950/40 border border-purple-800/40 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      disabled={campaignSending || !campaignSubject || !campaignBody}
+                      onClick={async () => {
+                        setCampaignSending(true); setCampaignResult(null)
+                        try {
+                          const r = await fetch('/api/newsletter/send-campaign', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                            body: JSON.stringify({ subject: campaignSubject, htmlBody: campaignBody, previewText: campaignPreview, textBody: campaignSubject, testEmail: campaignTest || undefined }),
+                          })
+                          const d = await r.json()
+                          setCampaignResult({ success: d.success, message: d.message || d.error, sent: d.sent, failed: d.failed })
+                        } catch { setCampaignResult({ success: false, message: 'Network error' }) }
+                        setCampaignSending(false)
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 btn-primary text-white font-bold py-3 rounded-xl text-sm disabled:opacity-40"
+                    >
+                      {campaignSending
+                        ? <><RefreshCw className="w-4 h-4 animate-spin" /> Sending...</>
+                        : campaignTest ? `📧 Send Test to ${campaignTest}` : `📧 Send to All ${newsletterSubs.filter(s=>s.status==='active').length} Active Subscribers`
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subscribers table */}
+              <div className="glow-border rounded-2xl bg-[#0F0A1E] overflow-hidden">
+                <div className="flex items-center justify-between p-5 border-b border-purple-900/30 flex-wrap gap-3">
+                  <h2 className="font-bold text-white flex items-center gap-2">
+                    <Users className="w-5 h-5 text-purple-400" /> Subscribers ({newsletterSubs.length})
+                  </h2>
+                  <button
+                    onClick={() => exportCSV(newsletterSubs.map(s => ({ email: s.email, name: s.name, status: s.status, joined: s.created_at })), 'newsletter-subscribers.csv')}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg"
+                  >
+                    <Download className="w-4 h-4" /> Export CSV
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-purple-950/20">
+                        {['Email', 'Name', 'Source', 'Status', 'Joined'].map(h => (
+                          <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-purple-900/20">
+                      {newsletterSubs.slice(0, 50).map(sub => (
+                        <tr key={sub.id} className="hover:bg-purple-950/10 transition-colors">
+                          <td className="px-5 py-3 text-sm text-white">{sub.email}</td>
+                          <td className="px-5 py-3 text-sm text-slate-300">{sub.name || '—'}</td>
+                          <td className="px-5 py-3 text-xs text-slate-400 capitalize">{sub.status === 'active' ? '' : ''}{sub.status}</td>
+                          <td className="px-5 py-3">
+                            <span className={`text-xs px-2 py-1 rounded-full font-semibold ${sub.status === 'active' ? 'bg-emerald-900/40 text-emerald-300' : 'bg-slate-700/40 text-slate-400'}`}>
+                              {sub.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-xs text-slate-500">{new Date(sub.created_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</td>
+                        </tr>
+                      ))}
+                      {newsletterSubs.length === 0 && (
+                        <tr><td colSpan={5} className="px-5 py-10 text-center text-slate-500 text-sm">No subscribers yet</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
