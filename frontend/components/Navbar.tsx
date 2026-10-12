@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag, Heart, Star, LayoutDashboard, Gift } from 'lucide-react'
+import { Menu, X, Search, Zap, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag, Heart, Star, LayoutDashboard, Gift } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import HoverPreview from '@/components/HoverPreview'
 import { useCart } from '@/lib/cart-context'
@@ -18,6 +18,7 @@ const navLinks = [
   { label: 'Blog',       href: '/blog' },
   { label: 'Contact',    href: '/contact' },
   { label: 'Cloud',      href: '/cloud' },
+  { label: '⚡ Lambda',   href: '/lambda' },
 ]
 
 // ── Search suggestions ─────────────────────────────────────────────────────────
