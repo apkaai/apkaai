@@ -19,6 +19,7 @@ const navLinks = [
   { label: 'Contact',    href: '/contact' },
   { label: 'Cloud',      href: '/cloud' },
   { label: '⚡ Lambda',   href: '/lambda' },
+  { label: '🧠 SageMaker', href: '/sagemaker' },
 ]
 
 // ── Search suggestions ─────────────────────────────────────────────────────────
@@ -203,6 +204,7 @@ export default function Navbar() {
                 className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                   link.label === 'Compare' ? 'text-purple-300 hover:text-white hover:bg-purple-900/30' :
                   link.label === 'Cloud'   ? 'text-sky-300 hover:text-white hover:bg-sky-900/20' :
+                  link.label === '🧠 SageMaker' ? 'text-orange-300 hover:text-white hover:bg-orange-900/20' :
                   'text-slate-400 hover:text-white hover:bg-purple-900/20'
                 }`}>
                 {link.label === 'Compare' && <BarChart3 className="w-3.5 h-3.5" />}
