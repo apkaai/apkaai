@@ -1,57 +1,27 @@
+// v2-nav-updated
 'use client'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Menu, X, Search, Zap, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag, Heart, Star, LayoutDashboard, Gift } from 'lucide-react'
+import { Menu, X, Search, BarChart3, User, LogOut, Settings, ChevronDown, Cloud, ShoppingCart, ShoppingBag, Heart, LayoutDashboard, Gift } from 'lucide-react'
 import ThemeToggle from '@/components/ThemeToggle'
 import HoverPreview from '@/components/HoverPreview'
 import { useCart } from '@/lib/cart-context'
-import { tools } from '@/lib/tools-data'
 
 const navLinks = [
-  { label: 'All Tools',  href: '/tools' },
-  { label: 'Categories', href: '/tools#categories' },
-  { label: 'Compare',    href: '/compare' },
-  { label: 'Pricing',    href: '/pricing' },
-  { label: 'Plans',      href: '/plans' },
-  { label: 'Blog',       href: '/blog' },
-  { label: 'Contact',    href: '/contact' },
-  { label: 'Cloud',      href: '/cloud' },
-  { label: '⚡ Lambda',   href: '/lambda' },
+  { label: 'All Tools',   href: '/tools' },
+  { label: 'Categories',  href: '/tools#categories' },
+  { label: 'Compare',     href: '/compare' },
+  { label: 'Pricing',     href: '/pricing' },
+  { label: 'Plans',       href: '/plans' },
+  { label: 'Blog',        href: '/blog' },
+  { label: 'Contact',     href: '/contact' },
+  { label: 'Cloud',       href: '/cloud' },
+  { label: '📅 Book Demo', href: '/demo' },
+  { label: '⚡ Lambda',    href: '/lambda' },
   { label: '🧠 SageMaker', href: '/sagemaker' },
 ]
-
-// ── Search suggestions ─────────────────────────────────────────────────────────
-interface Suggestion {
-  slug: string
-  name: string
-  logo: string
-  category: string
-  rating: number
-  pricing: string
-}
-
-function getSearchSuggestions(q: string): Suggestion[] {
-  if (!q || q.trim().length < 1) return []
-  const lower = q.toLowerCase().trim()
-  return tools
-    .filter(t =>
-      t.name.toLowerCase().includes(lower) ||
-      t.tagline.toLowerCase().includes(lower) ||
-      t.tags.some(tag => tag.toLowerCase().includes(lower)) ||
-      t.category.toLowerCase().includes(lower)
-    )
-    .slice(0, 6)
-    .map(t => ({
-      slug:     t.slug,
-      name:     t.name,
-      logo:     t.logo,
-      category: t.category,
-      rating:   t.rating,
-      pricing:  t.pricing,
-    }))
-}
 
 // ── Auth helpers ───────────────────────────────────────────────────────────────
 function getUser() {
@@ -79,19 +49,16 @@ export default function Navbar() {
   const [open, setOpen]             = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery]           = useState('')
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [suggestionIdx, setSuggestionIdx] = useState(-1)
   const [user, setUser]             = useState<{ name: string; email: string; role?: string } | null>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const searchInputRef              = useRef<HTMLInputElement>(null)
   const profileRef                  = useRef<HTMLDivElement>(null)
-  const suggestionsRef              = useRef<HTMLDivElement>(null)
-  const debounceRef                 = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { itemCount, toggleDrawer } = useCart()
 
   // Load user from storage on mount
   useEffect(() => {
     setUser(getUser())
+    // Listen for storage changes (login/logout in other tab)
     const handler = () => setUser(getUser())
     window.addEventListener('storage', handler)
     return () => window.removeEventListener('storage', handler)
@@ -108,66 +75,17 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  // Close suggestions on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node) &&
-          searchInputRef.current && !searchInputRef.current.contains(e.target as Node)) {
-        setSuggestions([])
-        setSuggestionIdx(-1)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
   useEffect(() => {
     if (searchOpen && searchInputRef.current) searchInputRef.current.focus()
   }, [searchOpen])
-
-  // Debounced suggestions
-  const handleQueryChange = useCallback((value: string) => {
-    setQuery(value)
-    setSuggestionIdx(-1)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setSuggestions(getSearchSuggestions(value))
-    }, 150)
-  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const q = query.trim()
     if (!q) return
-    setSuggestions([])
     setSearchOpen(false)
     setQuery('')
     router.push(`/tools?search=${encodeURIComponent(q)}`)
-  }
-
-  const handleSuggestionClick = (slug: string) => {
-    setSuggestions([])
-    setSearchOpen(false)
-    setQuery('')
-    router.push(`/tools/${slug}`)
-  }
-
-  // Keyboard navigation for suggestions
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (suggestions.length === 0) return
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSuggestionIdx(i => Math.min(i + 1, suggestions.length - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSuggestionIdx(i => Math.max(i - 1, -1))
-    } else if (e.key === 'Enter' && suggestionIdx >= 0) {
-      e.preventDefault()
-      handleSuggestionClick(suggestions[suggestionIdx].slug)
-    } else if (e.key === 'Escape') {
-      setSuggestions([])
-      setSuggestionIdx(-1)
-    }
   }
 
   return (
@@ -190,7 +108,7 @@ export default function Navbar() {
             <HoverPreview
               key={link.href}
               label={
-                link.label === 'All Tools'  ? 'View all 43 AI tools' :
+                link.label === 'All Tools'  ? 'View all 70 AI tools' :
                 link.label === 'Categories' ? 'Browse tools by category' :
                 link.label === 'Compare'    ? 'Compare AI tools side by side' :
                 link.label === 'Pricing'    ? 'See pricing plans in INR' :
@@ -217,27 +135,27 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Search */}
-          <HoverPreview label="Search across all 43 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
-            <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
-              className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
-              {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
-            </button>
-          </HoverPreview>
-
           {/* Cart */}
-          <HoverPreview label="View your cart">
+          <HoverPreview label="Your cart" icon={<ShoppingCart className="w-3.5 h-3.5" />}>
             <button
               onClick={toggleDrawer}
-              aria-label={`Cart — ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+              aria-label={`Cart${itemCount > 0 ? ` (${itemCount} items)` : ''}`}
               className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-purple-900/30 transition-all"
             >
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-purple-600 text-white text-[10px] font-bold rounded-full px-1 leading-none shadow-glow-sm">
-                  {itemCount > 99 ? '99+' : itemCount}
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+                  {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
+            </button>
+          </HoverPreview>
+
+          {/* Search */}
+          <HoverPreview label="Search across all 70 AI tools" icon={<Search className="w-3.5 h-3.5" />}>
+            <button onClick={() => setSearchOpen(p => !p)} aria-label="Search"
+              className={`p-2 rounded-lg transition-all ${searchOpen ? 'text-white bg-purple-700/40' : 'text-slate-400 hover:text-white hover:bg-purple-900/30'}`}>
+              {searchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
             </button>
           </HoverPreview>
 
@@ -341,71 +259,17 @@ export default function Navbar() {
       {/* Search bar */}
       {searchOpen && (
         <div className="border-t border-purple-900/30 bg-[#0D0826] px-4 py-3 shadow-lg">
-          <div className="max-w-2xl mx-auto relative">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                <input
-                  ref={searchInputRef}
-                  type="search"
-                  value={query}
-                  onChange={e => handleQueryChange(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search AI tools (e.g. ChatGPT, Midjourney, Cursor...)"
-                  autoComplete="off"
-                  className="w-full bg-purple-950/50 border border-purple-700/50 rounded-xl pl-11 pr-24 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                />
-                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary text-white text-xs font-bold px-4 py-1.5 rounded-lg">
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {/* Suggestions dropdown */}
-            {suggestions.length > 0 && (
-              <div
-                ref={suggestionsRef}
-                className="absolute top-full left-0 right-0 mt-1 bg-[#0F0A1E] border border-purple-800/50 rounded-xl shadow-2xl overflow-hidden z-50"
-              >
-                {suggestions.map((s, i) => (
-                  <button
-                    key={s.slug}
-                    onClick={() => handleSuggestionClick(s.slug)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-purple-900/20 last:border-0 ${
-                      i === suggestionIdx ? 'bg-purple-900/40' : 'hover:bg-purple-900/20'
-                    }`}
-                  >
-                    <span className="text-xl flex-shrink-0">{s.logo}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-semibold truncate">{s.name}</p>
-                      <p className="text-slate-500 text-xs truncate">{s.category}</p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                        <span className="text-xs text-slate-400">{s.rating}</span>
-                      </div>
-                      <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${
-                        s.pricing === 'Free' ? 'bg-emerald-900/40 text-emerald-400' :
-                        s.pricing === 'Paid' ? 'bg-amber-900/40 text-amber-400' :
-                        'bg-blue-900/40 text-blue-400'
-                      }`}>
-                        {s.pricing === 'Freemium' ? 'Premium' : s.pricing}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                {/* "See all results" footer */}
-                <button
-                  onClick={() => { router.push(`/tools?search=${encodeURIComponent(query.trim())}`); setSuggestions([]); setSearchOpen(false); setQuery('') }}
-                  className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 text-purple-400 hover:text-purple-300 text-xs font-semibold transition-colors bg-purple-950/30 hover:bg-purple-950/50"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  See all results for &ldquo;{query}&rdquo;
-                </button>
-              </div>
-            )}
-          </div>
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+              <input ref={searchInputRef} type="search" value={query} onChange={e => setQuery(e.target.value)}
+                placeholder="Search AI tools (e.g. ChatGPT, Midjourney, Cursor...)"
+                className="w-full bg-purple-950/50 border border-purple-700/50 rounded-xl pl-11 pr-24 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition" />
+              <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 btn-primary text-white text-xs font-bold px-4 py-1.5 rounded-lg">
+                Search
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
@@ -431,25 +295,26 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          {/* Cart link in mobile menu */}
+          <Link href="/cart" onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-purple-900/30 rounded-lg text-sm font-medium">
+            <ShoppingCart className="w-4 h-4 text-purple-400" />
+            Cart
+            {itemCount > 0 && (
+              <span className="ml-auto w-5 h-5 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center">
+                {itemCount}
+              </span>
+            )}
+          </Link>
           <div className="pt-3 border-t border-purple-900/30 grid grid-cols-2 gap-2">
-            {/* Cart link in mobile menu */}
-            <Link href="/cart" onClick={() => setOpen(false)}
-              className="col-span-2 flex items-center justify-center gap-2 border border-purple-700/40 text-slate-300 hover:text-white text-sm font-semibold px-4 py-2.5 rounded-lg hover:border-purple-500 transition-all">
-              <ShoppingCart className="w-4 h-4" />
-              Cart{itemCount > 0 && <span className="ml-1 bg-purple-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">{itemCount}</span>}
-            </Link>
             {user ? (
               <>
                 <Link href="/profile" onClick={() => setOpen(false)}
                   className="text-center border border-purple-700/40 text-slate-300 text-sm font-semibold px-4 py-2.5 rounded-lg hover:border-purple-500 transition-all">
                   My Profile
                 </Link>
-                <Link href="/orders" onClick={() => setOpen(false)}
-                  className="text-center border border-purple-700/40 text-slate-300 text-sm font-semibold px-4 py-2.5 rounded-lg hover:border-purple-500 transition-all flex items-center justify-center gap-1.5">
-                  <ShoppingBag className="w-3.5 h-3.5" /> Orders
-                </Link>
                 <button onClick={() => { setOpen(false); signOut() }}
-                  className="text-center bg-red-900/30 border border-red-700/40 text-red-300 text-sm font-semibold px-4 py-2.5 rounded-lg col-span-2">
+                  className="text-center bg-red-900/30 border border-red-700/40 text-red-300 text-sm font-semibold px-4 py-2.5 rounded-lg">
                   Sign Out
                 </button>
               </>
