@@ -25,10 +25,12 @@ let cloudRouter    = null
 let datalakeRouter = null
 let zoomRouter              = null
 let videoProcessingRouter   = null
+let sagemakerRouter          = null
 try { cloudRouter    = require('./routes/cloud')    } catch (e) { console.warn('[boot] cloud unavailable:', e.message)    }
 try { datalakeRouter = require('./routes/datalake') } catch (e) { console.warn('[boot] datalake unavailable:', e.message) }
 try { zoomRouter            = require('./routes/zoom')            } catch (e) { console.warn('[boot] zoom unavailable:', e.message) }
 try { videoProcessingRouter = require('./routes/videoprocessing') } catch (e) { console.warn('[boot] videoprocessing unavailable:', e.message) }
+try { sagemakerRouter         = require('./routes/sagemaker')         } catch (e) { console.warn('[boot] sagemaker unavailable:', e.message) }
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -90,7 +92,8 @@ app.use('/api/invoices',   invoicesRouter)
 if (cloudRouter)    app.use('/api/cloud',    cloudRouter)
 if (datalakeRouter)         app.use('/api/datalake', datalakeRouter)
 if (zoomRouter)             app.use('/api/zoom',    zoomRouter)
-if (videoProcessingRouter)  app.use('/api/videos',  videoProcessingRouter)
+if (videoProcessingRouter)  app.use('/api/videos',     videoProcessingRouter)
+if (sagemakerRouter)         app.use('/api/sagemaker',   sagemakerRouter)
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
