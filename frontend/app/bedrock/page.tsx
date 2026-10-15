@@ -228,7 +228,7 @@ export default function BedrockPage () {
     <div className="min-h-screen bg-[#08051A] px-4 py-6 max-w-4xl mx-auto">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-start gap-4 mb-6">
+      <div className="flex items-start gap-4 mb-6 sticky top-16 z-10 bg-[#08051A]/95 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-purple-900/20">
         <div className="w-12 h-12 rounded-xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center flex-shrink-0">
           <Brain className="w-6 h-6 text-orange-400" />
         </div>
@@ -261,11 +261,11 @@ export default function BedrockPage () {
       </div>
 
       {/* ── Model selector ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-4 overflow-x-auto">
         <span className="text-slate-500 text-sm">Model:</span>
         {models.map(m => (
           <button key={m.id} onClick={() => setModelId(m.id)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all whitespace-nowrap flex-shrink-0 ${
               modelId === m.id
                 ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
                 : 'bg-white/5 border-white/10 text-slate-400 hover:border-white/20 hover:text-white'
