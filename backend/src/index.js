@@ -24,9 +24,15 @@ const invoicesRouter   = require('./routes/invoices')
 let cloudRouter    = null
 let datalakeRouter = null
 let demoRouter     = null
+let bedrockRouter = null
+let videoRouter    = null
+let llmRouter      = null
 try { cloudRouter    = require('./routes/cloud')    } catch (e) { console.warn('[boot] cloud unavailable:', e.message)    }
 try { datalakeRouter = require('./routes/datalake') } catch (e) { console.warn('[boot] datalake unavailable:', e.message) }
 try { demoRouter     = require('./routes/demo')     } catch (e) { console.warn('[boot] demo unavailable:', e.message)     }
+try { bedrockRouter = require('./routes/bedrock') } catch (e) { console.warn('[boot] bedrock unavailable:', e.message) }
+try { videoRouter    = require('./routes/video')    } catch (e) { console.warn('[boot] video unavailable:', e.message)    }
+try { llmRouter      = require('./routes/llm')      } catch (e) { console.warn('[boot] llm unavailable:', e.message)      }
 
 const app  = express()
 const PORT = process.env.PORT || 4000
@@ -86,8 +92,11 @@ app.use('/api/newsletter', newsletterRouter)
 app.use('/api/invoices',   invoicesRouter)
 
 if (demoRouter)     app.use('/api/demo',     demoRouter)
+if (videoRouter)    app.use('/api/video',    videoRouter)
+if (llmRouter)      app.use('/api/llm',      llmRouter)
 if (cloudRouter)    app.use('/api/cloud',    cloudRouter)
 if (datalakeRouter) app.use('/api/datalake', datalakeRouter)
+if (bedrockRouter)  app.use('/api/bedrock',  bedrockRouter)
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
@@ -109,6 +118,8 @@ app.listen(PORT, () => {
   console.log(`   AWS Region  : ${process.env.AWS_REGION || 'ap-south-1'}`)
   if (datalakeRouter) console.log(`   Datalake    : /api/datalake (mounted)`)
   if (demoRouter)     console.log(`   Demo        : /api/demo (mounted)`)
+  if (videoRouter)    console.log(`   Video       : /api/video (mounted)`)
+  if (llmRouter)      console.log(`   LLM/SLM     : /api/llm (mounted)`)
 
   // Start demo reminder scheduler if available
   try {
